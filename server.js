@@ -16,6 +16,8 @@ app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, 'image_path')));
 app.use('/placeholder.jpg', express.static(path.join(__dirname, 'placeholder.jpg')));
 
+app.use('/listings', listingsModule.router);
+
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',

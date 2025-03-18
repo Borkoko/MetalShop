@@ -93,12 +93,24 @@ router.post('/', upload.array('images', 5), async (req, res) => {
 
         // Insert the t-shirt into the database
         const [result] = await pool.promise().query(
-            "INSERT INTO tshirts (userId, bandId, size, item_condition, price, description, imageUrl, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            [userId, bandId, size, condition, price, description, mainImageUrl, gender]
+            "INSERT INTO tshirts (userId, bandId, size, item_condition, price, description, gender) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [userId, bandId, size, condition, price, description, gender]
         );
 
         const tshirtId = result.insertId;
 
+        await pool.promise().query(
+            "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
+            [tshirtId, mainImageUrl]
+        );
+        
+        // Insert additional images
+        for (const imageUrl of additionalImageUrls) {
+            await pool.promise().query(
+                "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
+                [tshirtId, imageUrl]
+            );
+        }
         // Store all images in the tshirt_images table
         // First ensure the table exists
         await pool.promise().query(`
