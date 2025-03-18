@@ -26,6 +26,23 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+// Ensure tshirt_images table exists
+pool.query(`
+  CREATE TABLE IF NOT EXISTS tshirt_images (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tshirtId INT NOT NULL,
+    imageUrl VARCHAR(255) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tshirtId) REFERENCES tshirts(idTShirt) ON DELETE CASCADE
+  )
+`, (err) => {
+  if (err) {
+    console.error('Error creating tshirt_images table:', err);
+  } else {
+    console.log('Ensured tshirt_images table exists');
+  }
+});
+
 // Pass the database pool to the listings module
 listingsModule.setPool(pool);
 
@@ -221,12 +238,12 @@ app.get('/wishlist/:userId', async (req, res) => {
 // Utility endpoint to fix image paths
 app.get('/fix-image-paths', async (req, res) => {
     try {
-        // Check and update image paths in the database
-        const [rows] = await pool.promise().query('SELECT idTShirt, imageUrl FROM tshirts');
+        // Check and update image paths in the tshirts table
+        const [tshirtRows] = await pool.promise().query('SELECT idTShirt, imageUrl FROM tshirts');
         
         let updates = 0;
         
-        for (const row of rows) {
+        for (const row of tshirtRows) {
             if (row.imageUrl) {
                 let newPath = row.imageUrl;
                 let needsUpdate = false;
@@ -253,60 +270,49 @@ app.get('/fix-image-paths', async (req, res) => {
             }
         }
         
-        // Also check the tshirt_images table if it exists
-        const [tables] = await pool.promise().query("SHOW TABLES LIKE 'tshirt_images'");
+        // Check and update image paths in the tshirt_images table
+        const [imageRows] = await pool.promise().query('SELECT id, imageUrl FROM tshirt_images');
         
-        if (tables.length > 0) {
-            const [images] = await pool.promise().query('SELECT id, imageUrl FROM tshirt_images');
-            
-            for (const img of images) {
-                if (img.imageUrl) {
-                    let newPath = img.imageUrl;
-                    let needsUpdate = false;
-                    
-                    // If the path doesn't start with a slash, add one
-                    if (!newPath.startsWith('/')) {
-                        newPath = '/' + newPath;
-                        needsUpdate = true;
-                    }
-                    
-                    // If path has /uploads/ instead of /images/, replace it
-                    if (newPath.includes('/uploads/')) {
-                        newPath = newPath.replace('/uploads/', '/images/');
-                        needsUpdate = true;
-                    }
-                    
-                    if (needsUpdate) {
-                        await pool.promise().query(
-                            'UPDATE tshirt_images SET imageUrl = ? WHERE id = ?',
-                            [newPath, img.id]
-                        );
-                        updates++;
-                    }
+        for (const img of imageRows) {
+            if (img.imageUrl) {
+                let newPath = img.imageUrl;
+                let needsUpdate = false;
+                
+                // If the path doesn't start with a slash, add one
+                if (!newPath.startsWith('/')) {
+                    newPath = '/' + newPath;
+                    needsUpdate = true;
+                }
+                
+                // If path has /uploads/ instead of /images/, replace it
+                if (newPath.includes('/uploads/')) {
+                    newPath = newPath.replace('/uploads/', '/images/');
+                    needsUpdate = true;
+                }
+                
+                if (needsUpdate) {
+                    await pool.promise().query(
+                        'UPDATE tshirt_images SET imageUrl = ? WHERE id = ?',
+                        [newPath, img.id]
+                    );
+                    updates++;
                 }
             }
         }
         
-        const [updated] = await pool.promise().query('SELECT idTShirt, imageUrl FROM tshirts');
+        const [updatedTshirts] = await pool.promise().query('SELECT idTShirt, imageUrl FROM tshirts');
+        const [updatedImages] = await pool.promise().query('SELECT id, imageUrl FROM tshirt_images');
         
         res.json({
             message: `Updated ${updates} image paths`,
-            listings: updated
+            tshirtListings: updatedTshirts,
+            tshirtImages: updatedImages
         });
     } catch (error) {
         console.error('Error fixing image paths:', error);
         res.status(500).json({ error: 'Failed to fix image paths' });
     }
 });
-
-// Add this just before mounting the listings router
-app.use((req, res, next) => {
-    console.log(`${req.method} request to ${req.url}`);
-    next();
-});
-
-// Mount the listings router
-app.use('/listings', listingsModule.router);
 
 // Start the server
 const port = 3000;

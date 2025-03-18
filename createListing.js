@@ -1,4 +1,3 @@
-// Global variables
 let imageFiles = []; // For image previews (data URLs)
 let rawImageFiles = []; // For actual file upload
 let currentIndex = 0;
@@ -429,17 +428,6 @@ async function handleFormSubmit(event) {
         formData.append("images", file);
     }
     
-    // Debug log
-    console.log("Sending data:", {
-        userId: formData.get("userId"),
-        bandId: formData.get("bandId"),
-        size: formData.get("size"),
-        condition: formData.get("condition"),
-        price: formData.get("price"),
-        gender: formData.get("gender"),
-        imageCount: rawImageFiles.length
-    });
-    
     // Update button to loading state
     const submitBtn = document.querySelector(".submit-btn");
     if (!submitBtn) {
@@ -457,7 +445,6 @@ async function handleFormSubmit(event) {
         const response = await fetch("http://localhost:3000/listings", {
             method: "POST",
             body: formData,
-            // Don't set Content-Type when using FormData - it will be set automatically with boundary
         });
         
         console.log("Server response status:", response.status);
@@ -499,7 +486,6 @@ async function handleFormSubmit(event) {
         submitBtn.disabled = false;
     }
 }
-
 // Validate form before submission
 function validateForm() {
     // Get form values
