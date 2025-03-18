@@ -103,14 +103,13 @@ router.post('/', upload.array('images', 5), async (req, res) => {
             "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
             [tshirtId, mainImageUrl]
         );
-        
-        // Insert additional images
-        for (const imageUrl of additionalImageUrls) {
-            await pool.promise().query(
-                "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
-                [tshirtId, imageUrl]
-            );
-        }
+                // Insert additional images
+for (const imageUrl of imagePaths) {
+    await pool.promise().query(
+        "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
+        [tshirtId, imageUrl]
+    );
+}
         // Store all images in the tshirt_images table
         // First ensure the table exists
         await pool.promise().query(`
