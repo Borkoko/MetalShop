@@ -1,0 +1,453 @@
+/* ====== VARIABLES ====== */
+:root {
+    --primary: #ff0000;
+    --primary-dark: #cc0000;
+    --primary-light: #ff3333;
+    --primary-transparent: rgba(255, 0, 0, 0.1);
+    
+    --bg-dark: #121212;
+    --bg-card: #1e1e1e;
+    --bg-input: #252525;
+    --bg-button: #333;
+    
+    --text-light: #ffffff;
+    --text-muted: #aaaaaa;
+    --text-dark: #333333;
+    
+    --border-dark: #444;
+    --border-light: #666;
+    
+    --success: #4BB543;
+    --warning: #FFC107;
+    --error: #FF5252;
+    
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+    
+    --transition: all 0.3s ease;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+/* ====== RESET & BASE STYLES ====== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ====== TYPOGRAPHY ====== */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+p {
+    margin-bottom: 1rem;
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--primary-light);
+}
+
+/* ====== HEADER ====== */
+header {
+    background-color: rgba(0, 0, 0, 0.95);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 5%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+    border-bottom: 2px solid var(--primary);
+}
+
+.logo {
+    font-family: 'Metal Mania', cursive;
+    font-size: 2rem;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.logo a {
+    color: var(--primary);
+}
+
+.logo a:hover {
+    color: var(--primary-light);
+    text-shadow: 0 0 15px rgba(255, 0, 0, 0.8);
+}
+
+nav {
+    display: flex;
+    gap: 1rem;
+}
+
+.nav-button {
+    background: linear-gradient(to bottom, #333, #222);
+    color: var(--text-light);
+    border: 2px solid var(--primary);
+    padding: 0.6rem 1.2rem;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.nav-button:hover {
+    background: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
+}
+
+.nav-button i {
+    font-size: 0.9rem;
+}
+
+/* ====== MAIN CONTENT ====== */
+main {
+    flex: 1;
+    padding: 2rem 5%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ====== AUTH CONTAINER ====== */
+.auth-container {
+    display: flex;
+    max-width: 1000px;
+    width: 100%;
+    min-height: 600px;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border-dark);
+}
+
+.auth-content {
+    flex: 1;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-image {
+    flex: 1;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                url('https://images.unsplash.com/photo-1526478806334-5fd488fcaabc') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    position: relative;
+}
+
+.register-image {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+                url('https://images.unsplash.com/photo-1598387846148-47e82ee120cc') center/cover no-repeat;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.5), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.quote {
+    text-align: center;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.quote p {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+.quote cite {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* ====== AUTH HEADER ====== */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    font-family: 'Metal Mania', cursive;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.auth-header p {
+    color: var(--text-muted);
+}
+
+/* ====== AUTH FORM ====== */
+.auth-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+label {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+}
+
+label i {
+    color: var(--primary);
+}
+
+input, select, textarea {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 1rem;
+    color: var(--text-light);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-transparent);
+}
+
+.password-input-wrapper {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.toggle-password:hover {
+    color: var(--primary);
+}
+
+.password-strength {
+    margin-top: 0.5rem;
+}
+
+.strength-meter {
+    height: 4px;
+    background-color: var(--border-dark);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.strength-meter-fill {
+    height: 100%;
+    width: 0;
+    background-color: var(--primary);
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+#password-info {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.field-error {
+    color: var(--error);
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    display: none;
+}
+
+.error-message {
+    color: var(--error);
+    text-align: center;
+    margin-bottom: 0;
+    min-height: 20px;
+}
+
+/* ====== BUTTONS ====== */
+.form-actions {
+    margin-top: 1rem;
+}
+
+.primary-button {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+}
+
+.primary-button:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.primary-button:disabled {
+    background: #888;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ====== AUTH FOOTER ====== */
+.auth-footer {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.auth-footer p {
+    color: var(--text-muted);
+    margin-bottom: 0;
+}
+
+/* ====== FOOTER ====== */
+footer {
+    background-color: rgba(0, 0, 0, 0.95);
+    padding: 1rem;
+    text-align: center;
+    border-top: 2px solid var(--primary);
+}
+
+.copyright {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ====== RESPONSIVE STYLES ====== */
+@media (max-width: 992px) {
+    .auth-container {
+        flex-direction: column;
+        max-width: 600px;
+    }
+    
+    .auth-image {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+    
+    header {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .logo {
+        margin-bottom: 1rem;
+    }
+    
+    nav {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+    
+    .auth-content {
+        padding: 2rem;
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-content {
+        padding: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+}

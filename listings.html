@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-Shirt Listing - MetalShop</title>
+    <link rel="stylesheet" href="listings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button"><i class="fas fa-comment"></i> Chat</a>
+                <a href="login.html" class="nav-button"><i class="fas fa-user"></i> Login</a>
+                <a href="createListing.html" class="nav-button create-button"><i class="fas fa-plus"></i> Sell</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="listing-container">
+                <div id="listing-loading" class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading listing details...</span>
+                </div>
+                
+                <div id="listing-error" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Listing not found or has been removed.</span>
+                    <a href="listings.html" class="button-link">Browse other listings</a>
+                </div>
+                
+                <div id="listing-content" class="listing-content" style="display: none;">
+                    <div class="listing-gallery">
+                        <div class="main-image-container">
+                            <button id="prev-image" class="gallery-nav-button"><i class="fas fa-chevron-left"></i></button>
+                            <div class="main-image" id="main-image">
+                                <!-- Main image will be displayed here -->
+                            </div>
+                            <button id="next-image" class="gallery-nav-button"><i class="fas fa-chevron-right"></i></button>
+                            <div class="image-counter"><span id="current-index">1</span>/<span id="total-images">1</span></div>
+                        </div>
+                        <div class="thumbnails" id="thumbnails">
+                            <!-- Thumbnails will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="listing-details">
+                        <div class="listing-header">
+                            <h1 id="band-name">Loading...</h1>
+                            <div class="listing-timestamp" id="timestamp">Listed on: Loading...</div>
+                        </div>
+                        
+                        <div class="listing-price-container">
+                            <div class="listing-price" id="price">$0.00</div>
+                            <div class="seller-info">
+                                <span>Seller: </span>
+                                <span id="seller-name">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="listing-specs">
+                            <div class="spec-item">
+                                <span class="spec-label">Size:</span>
+                                <span class="spec-value" id="size">Loading...</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Gender:</span>
+                                <span class="spec-value" id="gender">Loading...</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Condition:</span>
+                                <span class="spec-value" id="condition">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="listing-description">
+                            <h3>Description</h3>
+                            <p id="description">Loading...</p>
+                        </div>
+                        
+                        <div class="listing-actions">
+                            <button id="contact-seller" class="primary-button">
+                                <i class="fas fa-comment"></i> Contact Seller
+                            </button>
+                            <button id="add-wishlist" class="secondary-button">
+                                <i class="fas fa-heart"></i> Add to Wishlist
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="related-listings">
+                <h2>Similar Listings</h2>
+                <div id="related-listings" class="related-grid">
+                    <!-- Related listings will be loaded here -->
+                    <div class="loading-indicator">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading similar items...</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">MetalShop</div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <a href="listings.html">Browse Listings</a>
+                        <a href="#">Featured Items</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Sell</h4>
+                        <a href="createListing.html">Create Listing</a>
+                        <a href="#">Seller Tips</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Help</h4>
+                        <a href="#">FAQ</a>
+                        <a href="#">Contact Us</a>
+                    </div>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notification system -->
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="createListing.js"></script>
+</body>
+</html>

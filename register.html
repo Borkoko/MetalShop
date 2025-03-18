@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MetalShop</title>
+    <link rel="stylesheet" href="login_register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="login.html" class="nav-button"><i class="fas fa-sign-in-alt"></i> Login</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="auth-container">
+                <div class="auth-content">
+                    <div class="auth-header">
+                        <h1>Join MetalShop</h1>
+                        <p>Create an account to buy and sell metal merchandise</p>
+                    </div>
+                    
+                    <form id="registerForm" class="auth-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fname"><i class="fas fa-user"></i> First Name</label>
+                                <input type="text" id="fname" name="fname" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="lname"><i class="fas fa-user"></i> Last Name</label>
+                                <input type="text" id="lname" name="lname" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                            <input type="email" id="email" name="email" required autocomplete="email">
+                            <div id="email-error" class="field-error"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password"><i class="fas fa-lock"></i> Password</label>
+                            <div class="password-input-wrapper">
+                                <input type="password" id="password" name="password" required minlength="6">
+                                <button type="button" class="toggle-password" title="Show/hide password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength">
+                                <div class="strength-meter" id="strength-meter">
+                                    <div class="strength-meter-fill" id="strength-meter-fill"></div>
+                                </div>
+                                <small id="password-info">Password must be at least 6 characters</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="primary-button">
+                                <i class="fas fa-user-plus"></i> Create Account
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="auth-footer">
+                        <p>Already have an account? <a href="login.html">Login here</a></p>
+                    </div>
+                </div>
+                
+                <div class="auth-image register-image">
+                    <div class="image-overlay">
+                        <div class="quote">
+                            <p>"Heavy metal isn't just music. It's a way of life."</p>
+                            <cite>— Dee Snider</cite>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="register.js"></script>
+    <script>
+        // Toggle password visibility
+        document.querySelector('.toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+        
+        // Password strength meter
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const meter = document.getElementById('strength-meter-fill');
+            const info = document.getElementById('password-info');
+            
+            // Simple strength calculation
+            let strength = 0;
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 8) strength += 15;
+            if (/[A-Z]/.test(password)) strength += 20;
+            if (/[0-9]/.test(password)) strength += 20;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 20;
+            
+            // Update meter
+            meter.style.width = strength + '%';
+            
+            // Change color based on strength
+            if (strength < 30) {
+                meter.style.backgroundColor = '#ff4444';
+                info.textContent = 'Password is weak';
+            } else if (strength < 60) {
+                meter.style.backgroundColor = '#ffbb33';
+                info.textContent = 'Password is moderate';
+            } else {
+                meter.style.backgroundColor = '#00C851';
+                info.textContent = 'Password is strong';
+            }
+            
+            if (password.length < 6) {
+                info.textContent = 'Password must be at least 6 characters';
+            }
+        });
+    </script>
+</body>
+</html>

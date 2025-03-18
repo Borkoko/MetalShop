@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetalShop - Buy and Sell Metal Band Merchandise</title>
+    <link rel="stylesheet" href="mainpage1.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button"><i class="fas fa-comment"></i> Chat</a>
+                <a href="login.html" class="nav-button"><i class="fas fa-user"></i> Login</a>
+                <a href="createListing.html" class="nav-button create-button"><i class="fas fa-plus"></i> Sell</a>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <div class="hero-content">
+                <h1>The Ultimate Marketplace for Metal Fans</h1>
+                <p>Buy and sell rare, vintage, and unique metal band merchandise</p>
+                <div class="hero-buttons">
+                    <a href="listings.html" class="primary-button"><i class="fas fa-search"></i> Browse Listings</a>
+                    <a href="createListing.html" class="secondary-button"><i class="fas fa-plus"></i> Sell Your Merch</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="featured-section">
+            <div class="section-header">
+                <h2>Featured Listings</h2>
+                <a href="listings.html" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="featured-listings" id="featured-listings">
+                <!-- Featured listings will be loaded here -->
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading featured listings...</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="bands-section">
+            <div class="section-header">
+                <h2>Popular Bands</h2>
+            </div>
+            <div class="band-logos" id="popular-bands">
+                <!-- Band logos will be loaded here -->
+                <div class="loading-indicator">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>Loading popular bands...</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3>List Your Items</h3>
+                    <p>Take photos and create listings for your metal merchandise</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Connect With Buyers</h3>
+                    <p>Chat directly with interested buyers about your items</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                    <h3>Sell & Ship</h3>
+                    <p>Complete the sale and ship your items to their new owners</p>
+                </div>
+            </div>
+            <a href="createListing.html" class="cta-button">Start Selling Today</a>
+        </section>
+
+        <section class="join-community">
+            <div class="join-content">
+                <h2>Join Our Metal Community</h2>
+                <p>Connect with thousands of metal fans and collectors worldwide</p>
+                <a href="register.html" class="join-button">Create an Account</a>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">MetalShop</div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Shop</h4>
+                        <a href="listings.html">Browse Listings</a>
+                        <a href="#">Featured Items</a>
+                        <a href="#">Recently Added</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Sell</h4>
+                        <a href="createListing.html">Create Listing</a>
+                        <a href="#">Seller Guidelines</a>
+                        <a href="#">Shipping Tips</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Help</h4>
+                        <a href="#">FAQ</a>
+                        <a href="#">Contact Us</a>
+                        <a href="#">Report an Issue</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Cookie Policy</a>
+                    </div>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <!-- Include the authentication script -->
+    <script src="auth.js"></script>
+    
+    <!-- Main page script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Load featured listings
+            loadFeaturedListings();
+            
+            // Load popular bands
+            loadPopularBands();
+        });
+        
+        // Load featured listings
+        function loadFeaturedListings() {
+            fetch("http://localhost:3000/listings?limit=6")
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to fetch listings");
+                    return response.json();
+                })
+                .then(listings => {
+                    const container = document.getElementById("featured-listings");
+                    
+                    // Clear loading indicator
+                    container.innerHTML = "";
+                    
+                    if (listings.length === 0) {
+                        container.innerHTML = "<p class='no-items'>No listings available yet.</p>";
+                        return;
+                    }
+                    
+                    // Create listing cards
+                    listings.forEach(listing => {
+                        const card = createListingCard(listing);
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    const container = document.getElementById("featured-listings");
+                    container.innerHTML = "<p class='error-message'>Failed to load listings. Please try again later.</p>";
+                });
+        }
+        
+        // Create a listing card element
+       // Create a listing card element
+       function createListingCard(listing) {
+    const card = document.createElement("div");
+    card.className = "listing-card";
+    
+    // Format price
+    const formattedPrice = parseFloat(listing.price).toFixed(2);
+    
+    // Ensure proper image path with fallback
+    const imageUrl = listing.imageUrl 
+        ? listing.imageUrl 
+        : '/placeholder.jpg';
+    
+    // Check which condition field exists in the listing object
+    const condition = listing.item_condition || listing.condition || "N/A";
+    
+    card.innerHTML = `
+        <div class="listing-image">
+            <img src="${imageUrl}" 
+                 alt="${listing.bandName} merchandise"
+                 onerror="this.onerror=null; this.src='/placeholder.jpg';">
+        </div>
+        <div class="listing-details">
+            <h3 class="listing-band">${listing.bandName}</h3>
+            <div class="listing-meta">
+                <span class="listing-size">${listing.size}</span>
+                <span class="listing-gender">${listing.gender}</span>
+                <span class="listing-condition">${condition}</span>
+            </div>
+            <div class="listing-price">$${formattedPrice}</div>
+        </div>
+    `;
+    
+    // Make card clickable
+    card.addEventListener("click", () => {
+        window.location.href = `listing.html?id=${listing.idTShirt}`;
+    });
+    
+    return card;
+}
+        
+        // Load popular bands
+        function loadPopularBands() {
+            fetch("http://localhost:3000/bands")
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to fetch bands");
+                    return response.json();
+                })
+                .then(bands => {
+                    const container = document.getElementById("popular-bands");
+                    
+                    // Clear loading indicator
+                    container.innerHTML = "";
+                    
+                    if (bands.length === 0) {
+                        container.innerHTML = "<p class='no-items'>No bands available yet.</p>";
+                        return;
+                    }
+                    
+                    // Take only the first 8 bands (or all if less than 8)
+                    const displayBands = bands.slice(0, 8);
+                    
+                    // Create band logos
+                    displayBands.forEach(band => {
+                        const bandLogo = document.createElement("div");
+                        bandLogo.className = "band-logo";
+                        
+                        // Since we don't have actual logos, use the first letter as a placeholder
+                        const firstLetter = band.name.charAt(0).toUpperCase();
+                        
+                        bandLogo.innerHTML = `
+                            <a href="listings.html?bandId=${band.idBand}" class="band-link">
+                                <div class="logo-placeholder">${firstLetter}</div>
+                                <span class="band-name">${band.name}</span>
+                            </a>
+                        `;
+                        
+                        container.appendChild(bandLogo);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    const container = document.getElementById("popular-bands");
+                    container.innerHTML = "<p class='error-message'>Failed to load bands. Please try again later.</p>";
+                });
+        }
+    </script>
+</body>
+</html>

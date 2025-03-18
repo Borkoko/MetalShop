@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Listing | MetalShop</title>
+    <link rel="stylesheet" href="createListing.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body data-requires-auth>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button"><i class="fas fa-comment"></i> Chat</a>
+                <a href="login.html" class="nav-button"><i class="fas fa-user"></i> Login</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="page-title">
+                <h1><i class="fas fa-tshirt"></i> Create New Listing</h1>
+                <p>Sell your metal merch to fans worldwide</p>
+            </div>
+
+            <div class="container">
+                <div class="listing-preview">
+                    <h2>Preview Your Listing</h2>
+                    <div class="preview-card">
+                        <div id="imagePreviewContainer">
+                            <button id="deleteImage" onclick="deleteCurrentImage()" class="control-button">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button id="prevImage" onclick="changeImage(-1)" class="control-button">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div id="imagePreview">
+                                <div class="upload-prompt">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <p>Upload images</p>
+                                </div>
+                            </div>
+                            <button id="nextImage" onclick="changeImage(1)" class="control-button">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            
+                            <div class="image-counter">
+                                <span id="current-image">0</span>/<span id="total-images">0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-details">
+                            <div class="preview-band">
+                                <i class="fas fa-music"></i>
+                                <span id="preview-band">Select a band</span>
+                            </div>
+                            
+                            <div class="preview-specs">
+                                <div class="spec-item">
+                                    <i class="fas fa-tag"></i>
+                                    <span id="preview-condition">Select condition</span>
+                                </div>
+                                <div class="spec-item">
+                                    <i class="fas fa-venus-mars"></i>
+                                    <span id="preview-gender">Select gender</span>
+                                </div>
+                                <div class="spec-item">
+                                    <i class="fas fa-tshirt"></i>
+                                    <span id="preview-size">Select size</span>
+                                </div>
+                            </div>
+                            
+                            <div class="preview-description">
+                                <i class="fas fa-align-left"></i>
+                                <span id="preview-description">Add a description...</span>
+                            </div>
+                            
+                            <div class="preview-price">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span id="preview-price">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="listing-form">
+                    <h2>Listing Details</h2>
+                    <form id="create-listing-form">
+                        <div class="form-group">
+                            <label for="bandSelect">
+                                <i class="fas fa-music"></i> Band
+                            </label>
+                            <select id="bandSelect" name="band" required>
+                                <option value="">Select a band</option>
+                                <!-- Will be populated by JavaScript -->
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="condition">
+                                    <i class="fas fa-tag"></i> Condition
+                                </label>
+                                <select id="condition" name="condition" required>
+                                    <option value="">Select condition</option>
+                                    <option value="New">New</option>
+                                    <option value="Used - Like New">Used - Like New</option>
+                                    <option value="Used - Good">Used - Good</option>
+                                    <option value="Used - Acceptable">Used - Acceptable</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="gender">
+                                    <i class="fas fa-venus-mars"></i> Gender
+                                </label>
+                                <select id="gender" name="gender" required>
+                                    <option value="">Select gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Unisex">Unisex</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="size">
+                                    <i class="fas fa-tshirt"></i> Size
+                                </label>
+                                <select id="size" name="size" required>
+                                    <option value="">Select size</option>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M">M</option>
+                                    <option value="L">L</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="price">
+                                    <i class="fas fa-dollar-sign"></i> Price
+                                </label>
+                                <div class="price-input-wrapper">
+                                    <span class="currency-symbol">$</span>
+                                    <input type="text" id="price" name="price" placeholder="0.00" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">
+                                <i class="fas fa-align-left"></i> Description
+                            </label>
+                            <textarea id="description" name="description" rows="4" 
+                                placeholder="Describe your item - include details about print, colors, band tour, any flaws, etc." required></textarea>
+                            <div class="char-count"><span id="char-count">0</span>/500 characters</div>
+                        </div>
+
+                        <div class="form-group upload-group">
+                            <label>
+                                <i class="fas fa-images"></i> Photos
+                            </label>
+                            <div class="upload-container">
+                                <input type="file" id="imageUpload" accept="image/*" multiple>
+                                <label for="imageUpload" class="upload-btn">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Choose images</span>
+                                </label>
+                                <div class="upload-info">
+                                    <span id="upload-info">No files selected</span>
+                                    <span class="upload-limit">(Max 5 images)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="form-message" class="form-message"></div>
+
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" onclick="window.location.href='listings.html'">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-check"></i> Create Listing
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">MetalShop</div>
+                <div class="footer-links">
+                    <a href="#">About</a>
+                    <a href="#">Terms</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notification system -->
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="createListing.js"></script>
+</body>
+</html>
