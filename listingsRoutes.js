@@ -13,19 +13,25 @@ if (!fs.existsSync(uploadDir)) {
 // Configure multer for file storage
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Create folder for each listing
-        const userId = req.body.userId || 'unknown';
-        const timestamp = Date.now();
-        const folderPath = path.join(uploadDir, `${userId}_${timestamp}`);
-        fs.mkdirSync(folderPath, { recursive: true });
-        console.log(`Creating upload directory: ${folderPath}`);
-        cb(null, folderPath);
+        if (!req.uploadFolderPath) {
+            const userId = req.body.userId || 'unknown';
+            const timestamp = Date.now();
+            req.uploadFolderPath = path.join(uploadDir, `${userId}_${timestamp}`);
+            
+            // Create the directory if it doesn't exist
+            if (!fs.existsSync(req.uploadFolderPath)) {
+                fs.mkdirSync(req.uploadFolderPath, { recursive: true });
+                console.log(`Created upload directory: ${req.uploadFolderPath}`);
+            }
+        }
+        
+        cb(null, req.uploadFolderPath);
     },
     filename: function (req, file, cb) {
         // Rename file to avoid collisions
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const filename = uniqueSuffix + path.extname(file.originalname);
-        console.log(`Saving file as: ${filename}`);
+        console.log(`Saving file as: ${filename} in folder: ${req.uploadFolderPath}`);
         cb(null, filename);
     }
 });
@@ -84,9 +90,19 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     try {
         // Get file paths for storing in database
         const imagePaths = req.files.map(file => {
-            // Store the relative path from the server root
+            // Log for debugging
+            console.log(`File path: ${file.path}`);
+            console.log(`Upload dir: ${uploadDir}`);
+            
+            // Get the relative path - declare before using
+            const relativePath = path.relative(uploadDir, file.path);
+            console.log(`Relative path: ${relativePath}`);
+            
+            // Format the path for web URLs
             return '/images/' + path.relative(uploadDir, file.path).replace(/\\/g, '/');
         });
+
+        console.log('Image paths to be saved:', imagePaths);
 
         // Save the first image as the main image (displayed in listings)
         const mainImageUrl = imagePaths.length > 0 ? imagePaths[0] : null;
@@ -98,31 +114,9 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         );
 
         const tshirtId = result.insertId;
+        console.log(`Created new tshirt with ID: ${tshirtId}`);
 
-        await pool.promise().query(
-            "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
-            [tshirtId, mainImageUrl]
-        );
-                // Insert additional images
-for (const imageUrl of imagePaths) {
-    await pool.promise().query(
-        "INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)",
-        [tshirtId, imageUrl]
-    );
-}
-        // Store all images in the tshirt_images table
-        // First ensure the table exists
-        await pool.promise().query(`
-            CREATE TABLE IF NOT EXISTS tshirt_images (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                tshirtId INT NOT NULL,
-                imageUrl VARCHAR(255) NOT NULL,
-                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (tshirtId) REFERENCES tshirts(idTShirt) ON DELETE CASCADE
-            )
-        `);
-
-        // Insert all images, including the main one
+        // Insert all images into tshirt_images table
         const imageInsertPromises = imagePaths.map(imagePath => 
             pool.promise().query(
                 'INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)',
@@ -131,6 +125,7 @@ for (const imageUrl of imagePaths) {
         );
 
         await Promise.all(imageInsertPromises);
+        console.log(`Inserted ${imagePaths.length} images for tshirt ID: ${tshirtId}`);
 
         res.status(201).json({ 
             message: 'Listing created successfully', 
@@ -139,10 +134,9 @@ for (const imageUrl of imagePaths) {
         });
     } catch (err) {
         console.error('Database error:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error: ' + err.message });
     }
 });
-
 // Endpoint to get all listings
 router.get('/', async (req, res) => {
     try {

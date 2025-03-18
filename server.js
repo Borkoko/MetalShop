@@ -13,7 +13,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+// In server.js
+// Serve images directly from the image_path directory
 app.use('/images', express.static(path.join(__dirname, 'image_path')));
+
+// Debug logging
+console.log(`Images are being served from: ${path.join(__dirname, 'image_path')}`);
+console.log(`They will be accessible at: http://localhost:3000/images/...`);
 app.use('/placeholder.jpg', express.static(path.join(__dirname, 'placeholder.jpg')));
 
 app.use('/listings', listingsModule.router);
