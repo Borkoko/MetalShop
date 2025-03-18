@@ -64,6 +64,14 @@ app.post('/users', async (req, res) => {
     }
 });
 
+const uploadDir = path.join(__dirname, 'image_path');
+
+// Create the upload directory if it doesn't exist
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`Created upload directory: ${uploadDir}`);
+}
+
 // Login endpoint
 app.post('/login', (req, res) => {
   const { email, password } = req.body;

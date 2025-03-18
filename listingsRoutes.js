@@ -91,38 +91,39 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         // Save the first image as the main image (displayed in listings)
         const mainImageUrl = imagePaths.length > 0 ? imagePaths[0] : null;
 
-        // Insert the t-shirt into the database - using the renamed column
+        // Insert the t-shirt into the database
         const [result] = await pool.promise().query(
             "INSERT INTO tshirts (userId, bandId, size, item_condition, price, description, imageUrl, gender) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [userId, bandId, size, condition, price, description, mainImageUrl, gender]
         );
 
-        // If we have multiple images, store them in a separate table
-        if (imagePaths.length > 1) {
-            // Create a new table for storing multiple images if it doesn't exist
-            await pool.promise().query(`
-                CREATE TABLE IF NOT EXISTS tshirt_images (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    tshirtId INT NOT NULL,
-                    imageUrl VARCHAR(255) NOT NULL,
-                    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (tshirtId) REFERENCES tshirts(idTShirt) ON DELETE CASCADE
-                )
-            `);
+        const tshirtId = result.insertId;
 
-            // Insert all image paths
-            const tshirtId = result.insertId;
-            for (const imagePath of imagePaths) {
-                await pool.promise().query(
-                    'INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)',
-                    [tshirtId, imagePath]
-                );
-            }
-        }
+        // Store all images in the tshirt_images table
+        // First ensure the table exists
+        await pool.promise().query(`
+            CREATE TABLE IF NOT EXISTS tshirt_images (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                tshirtId INT NOT NULL,
+                imageUrl VARCHAR(255) NOT NULL,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (tshirtId) REFERENCES tshirts(idTShirt) ON DELETE CASCADE
+            )
+        `);
+
+        // Insert all images, including the main one
+        const imageInsertPromises = imagePaths.map(imagePath => 
+            pool.promise().query(
+                'INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)',
+                [tshirtId, imagePath]
+            )
+        );
+
+        await Promise.all(imageInsertPromises);
 
         res.status(201).json({ 
             message: 'Listing created successfully', 
-            listingId: result.insertId,
+            listingId: tshirtId,
             images: imagePaths
         });
     } catch (err) {
@@ -134,7 +135,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
 // Endpoint to get all listings
 router.get('/', async (req, res) => {
     try {
-        // Build query based on filters - avoiding 'condition' as alias
+        // Build base query
         let query = `
             SELECT t.*, b.name as bandName, u.fname, u.lname 
             FROM tshirts t
@@ -161,7 +162,6 @@ router.get('/', async (req, res) => {
             params.push(req.query.gender);
         }
         
-        // Updated to use the renamed column
         if (req.query.condition) {
             filters.push('t.item_condition = ?');
             params.push(req.query.condition);
@@ -177,44 +177,35 @@ router.get('/', async (req, res) => {
             params.push(req.query.maxPrice);
         }
         
-        // Add limit if it exists
-        let limit = '';
-        if (req.query.limit) {
-            limit = ' LIMIT ?';
-            params.push(parseInt(req.query.limit));
-        }
-        
         // Add WHERE clause if filters exist
         if (filters.length > 0) {
             query += ' WHERE ' + filters.join(' AND ');
         }
         
-        // Add order by
-        query += ' ORDER BY t.createdAt DESC' + limit;
+        // Add order by and limit
+        query += ' ORDER BY t.createdAt DESC';
+        
+        if (req.query.limit) {
+            query += ' LIMIT ?';
+            params.push(parseInt(req.query.limit));
+        }
         
         const [listings] = await pool.promise().query(query, params);
         
-        // Map item_condition to condition for frontend compatibility
-        listings.forEach(listing => {
-            // Explicitly create condition property
-            listing.condition = listing.item_condition;
+        // For each listing, get the main image from the tshirt_images table
+        for (let listing of listings) {
+            const [images] = await pool.promise().query(`
+                SELECT imageUrl FROM tshirt_images 
+                WHERE tshirtId = ? 
+                ORDER BY id ASC LIMIT 1
+            `, [listing.idTShirt]);
             
-            // Check image path
-            if (listing.imageUrl) {
-                // Ensure path starts with /
-                if (!listing.imageUrl.startsWith('/')) {
-                    listing.imageUrl = '/' + listing.imageUrl;
-                }
-
-                // Check if image exists (optional)
-                if (!checkImageExists(listing.imageUrl)) {
-                    console.warn(`Image not found: ${listing.imageUrl}`);
-                    listing.imageUrl = '/placeholder.jpg';
-                }
-            } else {
+            if (images.length > 0) {
+                listing.imageUrl = images[0].imageUrl;
+            } else if (!listing.imageUrl) {
                 listing.imageUrl = '/placeholder.jpg';
             }
-        });
+        }
         
         res.json(listings);
     } catch (err) {
@@ -222,11 +213,10 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 // Endpoint to get a specific listing
 router.get('/:id', async (req, res) => {
     try {
-        // Get the listing details without using 'condition' as alias
+        // Get the listing details
         const [listings] = await pool.promise().query(`
             SELECT t.*, b.name as bandName, u.fname, u.lname, u.email
             FROM tshirts t
@@ -241,51 +231,24 @@ router.get('/:id', async (req, res) => {
 
         const listing = listings[0];
         
-        // Map item_condition to condition for frontend compatibility
-        listing.condition = listing.item_condition;
-
-        // Check if main image exists
-        if (listing.imageUrl) {
-            // Ensure path starts with /
-            if (!listing.imageUrl.startsWith('/')) {
-                listing.imageUrl = '/' + listing.imageUrl;
-            }
-            
-            if (!checkImageExists(listing.imageUrl)) {
-                console.warn(`Main image not found: ${listing.imageUrl}`);
-                listing.imageUrl = '/placeholder.jpg';
-            }
-        } else {
-            listing.imageUrl = '/placeholder.jpg';
-        }
-
-        // Check if we have a tshirt_images table and get additional images
-        const [tables] = await pool.promise().query("SHOW TABLES LIKE 'tshirt_images'");
+        // Get all images for this listing from tshirt_images table
+        const [images] = await pool.promise().query(`
+            SELECT imageUrl FROM tshirt_images
+            WHERE tshirtId = ?
+            ORDER BY id ASC
+        `, [req.params.id]);
         
-        if (tables.length > 0) {
-            const [images] = await pool.promise().query(`
-                SELECT imageUrl FROM tshirt_images
-                WHERE tshirtId = ?
-            `, [req.params.id]);
-            
-            // Add all images to the listing
-            listing.images = images.map(img => {
-                let imagePath = img.imageUrl;
-                
-                // Ensure path starts with /
-                if (imagePath && !imagePath.startsWith('/')) {
-                    imagePath = '/' + imagePath;
-                }
-                
-                if (imagePath && !checkImageExists(imagePath)) {
-                    console.warn(`Additional image not found: ${imagePath}`);
-                    return '/placeholder.jpg';
-                }
-                return imagePath;
-            });
-        } else {
-            // If no additional images table, just use the main image
-            listing.images = listing.imageUrl ? [listing.imageUrl] : ['/placeholder.jpg'];
+        // Add all images to the listing
+        listing.images = images.map(img => img.imageUrl);
+        
+        // If no images found in tshirt_images but we have a main image in tshirts
+        if (listing.images.length === 0 && listing.imageUrl) {
+            listing.images = [listing.imageUrl];
+        }
+        
+        // If still no images, use placeholder
+        if (listing.images.length === 0) {
+            listing.images = ['/placeholder.jpg'];
         }
 
         res.json(listing);
