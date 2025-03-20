@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listings | MetalShop</title>
+    <link rel="stylesheet" href="mainpage1.css">
+    <link rel="stylesheet" href="listings.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button active"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button"><i class="fas fa-comment"></i> Chat</a>
+                <a href="login.html" class="nav-button"><i class="fas fa-user"></i> Login</a>
+                <a href="createListing.html" class="nav-button create-button"><i class="fas fa-plus"></i> Sell</a>
+            </nav>
+        </header>
+
+        <main class="listings-page">
+            <div class="page-title">
+                <h1><i class="fas fa-tshirt"></i> Browse Metal Merch</h1>
+                <p>Find your perfect band t-shirt</p>
+            </div>
+
+            <div class="listings-container">
+                <!-- Filters Section -->
+                <aside class="filters-section">
+                    <div class="filters-header">
+                        <h3><i class="fas fa-filter"></i> Filters</h3>
+                        <button id="reset-filters" class="reset-btn">Reset</button>
+                    </div>
+
+                    <!-- Band Filter -->
+                    <div class="filter-group">
+                        <h4>Band</h4>
+                        <div id="band-filter" class="filter-options">
+                            <!-- Bands will be dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Size Filter -->
+                    <div class="filter-group">
+                        <h4>Size</h4>
+                        <div class="filter-options">
+                            <label>
+                                <input type="checkbox" name="size" value="XS"> XS
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size" value="S"> S
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size" value="M"> M
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size" value="L"> L
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size" value="XL"> XL
+                            </label>
+                            <label>
+                                <input type="checkbox" name="size" value="XXL"> XXL
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Condition Filter -->
+                    <div class="filter-group">
+                        <h4>Condition</h4>
+                        <div class="filter-options">
+                            <label>
+                                <input type="checkbox" name="condition" value="New"> New
+                            </label>
+                            <label>
+                                <input type="checkbox" name="condition" value="Used - Like New"> Used - Like New
+                            </label>
+                            <label>
+                                <input type="checkbox" name="condition" value="Used - Good"> Used - Good
+                            </label>
+                            <label>
+                                <input type="checkbox" name="condition" value="Used - Acceptable"> Used - Acceptable
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Gender Filter -->
+                    <div class="filter-group">
+                        <h4>Gender</h4>
+                        <div class="filter-options">
+                            <label>
+                                <input type="checkbox" name="gender" value="Male"> Male
+                            </label>
+                            <label>
+                                <input type="checkbox" name="gender" value="Female"> Female
+                            </label>
+                            <label>
+                                <input type="checkbox" name="gender" value="Unisex"> Unisex
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Price Range Filter -->
+                    <div class="filter-group">
+                        <h4>Price Range</h4>
+                        <div class="price-range-filter">
+                            <div class="price-inputs">
+                                <input type="number" id="min-price" placeholder="Min" min="0">
+                                <span>to</span>
+                                <input type="number" id="max-price" placeholder="Max" min="0">
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Listings Grid -->
+                <section class="listings-grid">
+                    <div class="listings-header">
+                        <div class="result-count">
+                            <span id="result-count-text">0 listings</span>
+                        </div>
+                        <div class="sort-options">
+                            <select id="sort-select">
+                                <option value="newest">Newest First</option>
+                                <option value="price-low">Price: Low to High</option>
+                                <option value="price-high">Price: High to Low</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="listings-container" class="featured-listings">
+                        <!-- Listings will be dynamically populated here -->
+                        <div class="loading-indicator">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading listings...</span>
+                        </div>
+                    </div>
+
+                    <div id="pagination" class="pagination">
+                        <button id="prev-page" class="page-btn">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </button>
+                        <span id="page-info">Page 1 of 1</span>
+                        <button id="next-page" class="page-btn">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">MetalShop</div>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="listings.js"></script>
+</body>
+</html>
