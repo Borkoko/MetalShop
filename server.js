@@ -362,6 +362,246 @@ app.get('/fix-image-paths', async (req, res) => {
     }
 });
 
+app.post('/chat/create', async (req, res) => {
+    const { senderId, receiverId, tshirtId } = req.body;
+
+    // Input validation
+    if (!senderId || !receiverId || !tshirtId) {
+        return res.status(400).json({ error: 'Sender ID, Receiver ID, and Tshirt ID are required' });
+    }
+
+    // Prevent chatting with self
+    if (senderId === receiverId) {
+        return res.status(400).json({ error: 'You cannot chat with yourself' });
+    }
+
+    try {
+        // Verify both sender and receiver exist
+        const [senderCheck] = await pool.promise().query(
+            'SELECT * FROM users WHERE idUsers = ?',
+            [senderId]
+        );
+        const [receiverCheck] = await pool.promise().query(
+            'SELECT * FROM users WHERE idUsers = ?',
+            [receiverId]
+        );
+
+        if (senderCheck.length === 0 || receiverCheck.length === 0) {
+            return res.status(404).json({ error: 'Invalid user IDs' });
+        }
+
+        // Check if the tshirt exists
+        const [tshirtCheck] = await pool.promise().query(
+            'SELECT userId FROM tshirts WHERE idTShirt = ?',
+            [tshirtId]
+        );
+
+        if (tshirtCheck.length === 0) {
+            return res.status(404).json({ error: 'Tshirt not found' });
+        }
+
+        // Prevent listing owner from chatting about their own listing
+        if (tshirtCheck[0].userId === senderId) {
+            return res.status(400).json({ error: 'You cannot initiate a chat about your own listing' });
+        }
+
+        // Check if a chat already exists between these users for this tshirt
+        const [existingChats] = await pool.promise().query(
+            'SELECT * FROM chat WHERE tshirtId = ? AND ' +
+            '((senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?))',
+            [tshirtId, senderId, receiverId, receiverId, senderId]
+        );
+
+        if (existingChats.length > 0) {
+            return res.json({ 
+                message: 'Chat already exists', 
+                chatId: existingChats[0].idMessage 
+            });
+        }
+
+        // Create initial message in the chat
+        const [result] = await pool.promise().query(
+            'INSERT INTO chat (senderId, receiverId, tshirtId, message) VALUES (?, ?, ?, ?)',
+            [senderId, receiverId, tshirtId, 'Chat initiated']
+        );
+
+        res.status(201).json({ 
+            message: 'Chat created successfully', 
+            chatId: result.insertId 
+        });
+    } catch (error) {
+        console.error('Chat creation error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Send a message in an existing chat
+app.post('/chat/message', async (req, res) => {
+    const { senderId, receiverId, tshirtId, message } = req.body;
+
+    // Input validation
+    if (!senderId || !receiverId || !tshirtId || !message) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    // Prevent chatting with self
+    if (senderId === receiverId) {
+        return res.status(400).json({ error: 'You cannot send a message to yourself' });
+    }
+
+    try {
+        // Verify the chat exists
+        const [chatCheck] = await pool.promise().query(
+            'SELECT * FROM chat WHERE tshirtId = ? AND ' +
+            '((senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?))',
+            [tshirtId, senderId, receiverId, receiverId, senderId]
+        );
+
+        if (chatCheck.length === 0) {
+            return res.status(404).json({ error: 'Chat does not exist' });
+        }
+
+        // Verify message length
+        if (message.trim().length === 0) {
+            return res.status(400).json({ error: 'Message cannot be empty' });
+        }
+
+        if (message.length > 500) {
+            return res.status(400).json({ error: 'Message is too long (max 500 characters)' });
+        }
+
+        // Insert the message
+        const [result] = await pool.promise().query(
+            'INSERT INTO chat (senderId, receiverId, tshirtId, message) VALUES (?, ?, ?, ?)',
+            [senderId, receiverId, tshirtId, message]
+        );
+
+        res.status(201).json({ 
+            message: 'Message sent successfully', 
+            messageId: result.insertId 
+        });
+    } catch (error) {
+        console.error('Message sending error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get chat history for a specific listing between two users
+app.get('/chat/history', async (req, res) => {
+    const { senderId, receiverId, tshirtId } = req.query;
+
+    // Input validation
+    if (!senderId || !receiverId || !tshirtId) {
+        return res.status(400).json({ error: 'Sender ID, Receiver ID, and Tshirt ID are required' });
+    }
+
+    // Prevent chatting with self
+    if (senderId === receiverId) {
+        return res.status(400).json({ error: 'Invalid chat participants' });
+    }
+
+    try {
+        // Verify the chat exists
+        const [chatCheck] = await pool.promise().query(
+            'SELECT * FROM chat WHERE tshirtId = ? AND ' +
+            '((senderId = ? AND receiverId = ?) OR (senderId = ? AND receiverId = ?))',
+            [tshirtId, senderId, receiverId, receiverId, senderId]
+        );
+
+        if (chatCheck.length === 0) {
+            return res.status(404).json({ error: 'Chat does not exist' });
+        }
+
+        // Fetch chat messages
+        const [messages] = await pool.promise().query(`
+            SELECT 
+                c.*,
+                u.fname AS senderFirstName,
+                u.lname AS senderLastName
+            FROM chat c
+            JOIN users u ON c.senderId = u.idUsers
+            WHERE c.tshirtId = ? AND (
+                (c.senderId = ? AND c.receiverId = ?) OR 
+                (c.senderId = ? AND c.receiverId = ?)
+            )
+            ORDER BY c.sentAt ASC
+        `, [tshirtId, senderId, receiverId, receiverId, senderId]);
+
+        res.json(messages);
+    } catch (error) {
+        console.error('Fetching chat history error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get all chats for a user
+app.get('/chat/list/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    console.log(`Received request for chat list. User ID: ${userId}`);
+    // Input validation
+    if (!userId) {
+        console.error('Chat list request: No user ID provided');
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    try {
+        // Verify user exists
+        const [userCheck] = await pool.promise().query(
+            'SELECT * FROM users WHERE idUsers = ?',
+            [userId]
+        );
+
+        if (userCheck.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Fetch unique chats for the user
+        const [chats] = await pool.promise().query(`
+            WITH UserChats AS (
+                SELECT DISTINCT 
+                    t.idTShirt,
+                    t.imageUrl,
+                    b.name AS bandName,
+                    t.size,
+                    CASE 
+                        WHEN c.senderId = ? THEN c.receiverId
+                        ELSE c.senderId
+                    END AS otherUserId,
+                    MAX(c.sentAt) AS lastMessageTime
+                FROM chat c
+                JOIN tshirts t ON c.tshirtId = t.idTShirt
+                JOIN bands b ON t.bandId = b.idBand
+                WHERE c.senderId = ? OR c.receiverId = ?
+                GROUP BY t.idTShirt, otherUserId
+            )
+            SELECT 
+                uc.*,
+                u.fname AS otherUserFirstName,
+                u.lname AS otherUserLastName,
+                (
+                    SELECT message 
+                    FROM chat 
+                    WHERE tshirtId = uc.idTShirt AND 
+                          ((senderId = ? AND receiverId = uc.otherUserId) OR 
+                           (senderId = uc.otherUserId AND receiverId = ?))
+                    ORDER BY sentAt DESC 
+                    LIMIT 1
+                ) AS lastMessage
+            FROM UserChats uc
+            JOIN users u ON uc.otherUserId = u.idUsers
+            ORDER BY uc.lastMessageTime DESC
+        `, [userId, userId, userId, userId, userId]);
+
+        res.json(chats);
+    } catch (error) {
+        console.error('Detailed error fetching chat list:', error);
+        res.status(500).json({ 
+            error: 'Internal server error', 
+            details: error.message 
+        });
+    }
+});
+
 // Start the server
 const port = 3000;
 app.listen(port, () => {
