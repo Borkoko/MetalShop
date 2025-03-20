@@ -50,32 +50,6 @@
         <footer>
             <div class="footer-content">
                 <div class="footer-logo">MetalShop</div>
-                <div class="footer-links">
-                    <div class="footer-column">
-                        <h4>Shop</h4>
-                        <a href="listings.html">Browse Listings</a>
-                        <a href="#">Featured Items</a>
-                        <a href="#">Recently Added</a>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Sell</h4>
-                        <a href="createListing.html">Create Listing</a>
-                        <a href="#">Seller Guidelines</a>
-                        <a href="#">Shipping Tips</a>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Help</h4>
-                        <a href="#">FAQ</a>
-                        <a href="#">Contact Us</a>
-                        <a href="#">Report an Issue</a>
-                    </div>
-                    <div class="footer-column">
-                        <h4>Legal</h4>
-                        <a href="#">Terms of Service</a>
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Cookie Policy</a>
-                    </div>
-                </div>
                 <div class="social-links">
                     <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
@@ -86,7 +60,6 @@
                 &copy; 2025 MetalShop - All Rights Reserved
             </div>
         </footer>
-    </div>
 
     <!-- Include the authentication script -->
     <script src="auth.js"></script>
@@ -152,39 +125,39 @@
 
         // Create a listing card element
         function createListingCard(listing) {
-            const card = document.createElement("div");
-            card.className = "listing-card";
-            
-            // Format price
-            const formattedPrice = parseFloat(listing.price).toFixed(2);
-            
-            // Properly format the image URL
-            const imageUrl = ensureAbsoluteUrl(listing.imageUrl);
-            
-            card.innerHTML = `
-                <div class="listing-image">
-                    <img src="${imageUrl}" 
-                         alt="${listing.bandName} merchandise"
-                         onerror="this.onerror=null; this.src='http://localhost:3000/placeholder.jpg';">
-                </div>
-                <div class="listing-details">
-                    <h3 class="listing-band">${listing.bandName}</h3>
-                    <div class="listing-meta">
-                        <span class="listing-size">${listing.size}</span>
-                        <span class="listing-gender">${listing.gender}</span>
-                        <span class="listing-condition">${listing.condition || ''}</span>
-                    </div>
-                    <div class="listing-price">$${formattedPrice}</div>
-                </div>
-            `;
-            
-            // Make card clickable
-            card.addEventListener("click", () => {
-                window.location.href = `listing.html?id=${listing.idTShirt}`;
-            });
-            
-            return card;
-        }
+    const card = document.createElement("div");
+    card.className = "listing-card";
+    
+    // Format price
+    const formattedPrice = parseFloat(listing.price).toFixed(2);
+    
+    // Properly format the image URL
+    const imageUrl = ensureAbsoluteUrl(listing.imageUrl);
+    
+    card.innerHTML = `
+        <div class="listing-image">
+            <img src="${imageUrl}" 
+                 alt="${listing.bandName} merchandise"
+                 onerror="this.onerror=null; this.src='http://localhost:3000/placeholder.jpg';">
+        </div>
+        <div class="listing-details">
+            <h3 class="listing-band">${listing.bandName}</h3>
+            <div class="listing-meta">
+                <span class="listing-size">${listing.size}</span>
+                <span class="listing-gender">${listing.gender}</span>
+                <span class="listing-condition">${listing.item_condition || ''}</span>
+            </div>
+            <div class="listing-price">$${formattedPrice}</div>
+        </div>
+    `;
+    
+    // Make card clickable
+    card.addEventListener("click", () => {
+        window.location.href = `listing.html?id=${listing.idTShirt}`;
+    });
+    
+    return card;
+}
     </script>
 </body>
 </html>

@@ -328,46 +328,17 @@ nav {
 }
 
 /* ====== FOOTER ====== */
-footer {
-    background-color: #0a0a0a;
-    padding: 4rem 5% 2rem;
-    margin-top: auto;
-}
-
 .footer-content {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 3rem;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
 }
 
 .footer-logo {
     font-family: 'Metal Mania', cursive;
     font-size: 2rem;
-    color: var(--primary);
-    margin-bottom: 1rem;
-}
-
-.footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 3rem;
-}
-
-.footer-column h4 {
-    color: var(--text-light);
-    margin-bottom: 1.2rem;
-    font-size: 1.1rem;
-}
-
-.footer-column a {
-    display: block;
-    color: var(--text-muted);
-    margin-bottom: 0.8rem;
-}
-
-.footer-column a:hover {
     color: var(--primary);
 }
 
@@ -401,7 +372,6 @@ footer {
     padding-top: 2rem;
     border-top: 1px solid var(--border-dark);
 }
-
 /* ====== LOADING INDICATORS ====== */
 .loading-indicator {
     display: flex;
@@ -523,22 +493,10 @@ footer {
 }
 
 @media (max-width: 576px) {
-    .featured-listings {
-        grid-template-columns: 1fr;
-    }
-    
-    .footer-column {
-        width: 100%;
+    .footer-content {
+        flex-direction: column;
+        gap: 1.5rem;
         text-align: center;
-        margin-bottom: 1.5rem;
-    }
-    
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    h2 {
-        font-size: 1.5rem;
     }
 }
 
