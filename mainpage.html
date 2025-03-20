@@ -143,54 +143,53 @@
     <!-- Main page script -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Load featured listings
-            loadFeaturedListings();
+    // Load featured listings
+    loadFeaturedListings();
+    
+    // Load popular bands
+    loadPopularBands();
+});
+
+// Load featured listings
+function loadFeaturedListings() {
+    fetch("http://localhost:3000/listings?limit=6")
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to fetch listings");
+            return response.json();
+        })
+        .then(listings => {
+            const container = document.getElementById("featured-listings");
             
-            // Load popular bands
-            loadPopularBands();
+            // Clear loading indicator
+            container.innerHTML = "";
+            
+            if (listings.length === 0) {
+                container.innerHTML = "<p class='no-items'>No listings available yet.</p>";
+                return;
+            }
+            
+            // Create listing cards
+            listings.forEach(listing => {
+                const card = createListingCard(listing);
+                container.appendChild(card);
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            const container = document.getElementById("featured-listings");
+            container.innerHTML = "<p class='error-message'>Failed to load listings. Please try again later.</p>";
         });
-        
-        // Load featured listings
-        function loadFeaturedListings() {
-            fetch("http://localhost:3000/listings?limit=6")
-                .then(response => {
-                    if (!response.ok) throw new Error("Failed to fetch listings");
-                    return response.json();
-                })
-                .then(listings => {
-                    const container = document.getElementById("featured-listings");
-                    
-                    // Clear loading indicator
-                    container.innerHTML = "";
-                    
-                    if (listings.length === 0) {
-                        container.innerHTML = "<p class='no-items'>No listings available yet.</p>";
-                        return;
-                    }
-                    
-                    // Create listing cards
-                    listings.forEach(listing => {
-                        const card = createListingCard(listing);
-                        container.appendChild(card);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    const container = document.getElementById("featured-listings");
-                    container.innerHTML = "<p class='error-message'>Failed to load listings. Please try again later.</p>";
-                });
-        }
-        
-        // Create a listing card element
-       // Create a listing card element
-       function createListingCard(listing) {
+}
+
+// Create a listing card element
+function createListingCard(listing) {
     const card = document.createElement("div");
     card.className = "listing-card";
     
     // Format price
     const formattedPrice = parseFloat(listing.price).toFixed(2);
     
-    // Ensure proper image path with fallback
+    // Determine the image to use
     const imageUrl = listing.imageUrl 
         ? listing.imageUrl 
         : '/placeholder.jpg';
@@ -222,52 +221,52 @@
     
     return card;
 }
-        
-        // Load popular bands
-        function loadPopularBands() {
-            fetch("http://localhost:3000/bands")
-                .then(response => {
-                    if (!response.ok) throw new Error("Failed to fetch bands");
-                    return response.json();
-                })
-                .then(bands => {
-                    const container = document.getElementById("popular-bands");
-                    
-                    // Clear loading indicator
-                    container.innerHTML = "";
-                    
-                    if (bands.length === 0) {
-                        container.innerHTML = "<p class='no-items'>No bands available yet.</p>";
-                        return;
-                    }
-                    
-                    // Take only the first 8 bands (or all if less than 8)
-                    const displayBands = bands.slice(0, 8);
-                    
-                    // Create band logos
-                    displayBands.forEach(band => {
-                        const bandLogo = document.createElement("div");
-                        bandLogo.className = "band-logo";
-                        
-                        // Since we don't have actual logos, use the first letter as a placeholder
-                        const firstLetter = band.name.charAt(0).toUpperCase();
-                        
-                        bandLogo.innerHTML = `
-                            <a href="listings.html?bandId=${band.idBand}" class="band-link">
-                                <div class="logo-placeholder">${firstLetter}</div>
-                                <span class="band-name">${band.name}</span>
-                            </a>
-                        `;
-                        
-                        container.appendChild(bandLogo);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    const container = document.getElementById("popular-bands");
-                    container.innerHTML = "<p class='error-message'>Failed to load bands. Please try again later.</p>";
-                });
-        }
+
+// Load popular bands
+function loadPopularBands() {
+    fetch("http://localhost:3000/bands")
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to fetch bands");
+            return response.json();
+        })
+        .then(bands => {
+            const container = document.getElementById("popular-bands");
+            
+            // Clear loading indicator
+            container.innerHTML = "";
+            
+            if (bands.length === 0) {
+                container.innerHTML = "<p class='no-items'>No bands available yet.</p>";
+                return;
+            }
+            
+            // Take only the first 8 bands (or all if less than 8)
+            const displayBands = bands.slice(0, 8);
+            
+            // Create band logos
+            displayBands.forEach(band => {
+                const bandLogo = document.createElement("div");
+                bandLogo.className = "band-logo";
+                
+                // Since we don't have actual logos, use the first letter as a placeholder
+                const firstLetter = band.name.charAt(0).toUpperCase();
+                
+                bandLogo.innerHTML = `
+                    <a href="listings.html?bandId=${band.idBand}" class="band-link">
+                        <div class="logo-placeholder">${firstLetter}</div>
+                        <span class="band-name">${band.name}</span>
+                    </a>
+                `;
+                
+                container.appendChild(bandLogo);
+            });
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            const container = document.getElementById("popular-bands");
+            container.innerHTML = "<p class='error-message'>Failed to load bands. Please try again later.</p>";
+        });
+}
     </script>
 </body>
 </html>
