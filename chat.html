@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chats | MetalShop</title>
+    <link rel="stylesheet" href="mainpage1.css">
+    <link rel="stylesheet" href="chat.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button active"><i class="fas fa-comment"></i> Chat</a>
+                <a href="login.html" class="nav-button"><i class="fas fa-user"></i> Login</a>
+                <a href="createListing.html" class="nav-button create-button"><i class="fas fa-plus"></i> Sell</a>
+            </nav>
+        </header>
+
+        <main class="chat-page">
+            <div class="chat-container">
+                <div class="chat-sidebar">
+                    <div class="chat-sidebar-header">
+                        <h2><i class="fas fa-comments"></i> Chats</h2>
+                    </div>
+                    <div id="chat-list" class="chat-list">
+                        <div class="loading-indicator">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading chats...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="chat-window" class="chat-window">
+                    <div class="chat-window-header">
+                        <button id="chat-close-btn" class="chat-close-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="chat-window-title">
+                            <h3>Chat</h3>
+                        </div>
+                    </div>
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="no-chat-selected">
+                            <i class="fas fa-comment-dots"></i>
+                            <p>Select a chat to start messaging</p>
+                        </div>
+                    </div>
+                    <form id="chat-form" class="chat-form">
+                        <input 
+                            type="text" 
+                            id="chat-message-input" 
+                            placeholder="Type a message..." 
+                            required
+                            maxlength="500"
+                        >
+                        <button type="submit">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">MetalShop</div>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>
