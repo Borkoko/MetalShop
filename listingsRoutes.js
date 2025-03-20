@@ -28,6 +28,9 @@ const storage = multer.diskStorage({
         cb(null, req.uploadFolderPath);
     },
     filename: function (req, file, cb) {
+        // Log the received file information
+        console.log(`Received file: ${file.originalname}, mimetype: ${file.mimetype}, size: ${file.size || 'unknown'}`);
+        
         // Rename file to avoid collisions
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         const filename = uniqueSuffix + path.extname(file.originalname);

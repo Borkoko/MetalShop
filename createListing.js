@@ -424,8 +424,16 @@ async function handleFormSubmit(event) {
     formData.append("gender", document.getElementById("gender").value);
     
     // Add images
-    for (const file of rawImageFiles) {
+    console.log(`Adding ${rawImageFiles.length} image(s) to form data`);
+    for (let i = 0; i < rawImageFiles.length; i++) {
+        const file = rawImageFiles[i];
+        console.log(`Adding image ${i+1}:`, file.name, file.type, file.size);
         formData.append("images", file);
+    }
+    
+    // Log form data (for debugging)
+    for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1]);
     }
     
     // Update button to loading state
@@ -445,6 +453,7 @@ async function handleFormSubmit(event) {
         const response = await fetch("http://localhost:3000/listings", {
             method: "POST",
             body: formData,
+            // Important: Don't set Content-Type header, the browser will set it with the boundary
         });
         
         console.log("Server response status:", response.status);

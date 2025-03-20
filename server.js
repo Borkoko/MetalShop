@@ -13,15 +13,54 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Define paths for images and placeholder
+const imagePath = path.join(__dirname, 'image_path');
+const placeholderPath = path.join(__dirname, 'placeholder.jpg');
 
-// In server.js
-// Serve images directly from the image_path directory
-app.use('/images', express.static(path.join(__dirname, 'image_path')));
+// Create the image_path directory if it doesn't exist
+if (!fs.existsSync(imagePath)) {
+    fs.mkdirSync(imagePath, { recursive: true });
+    console.log(`Created image directory: ${imagePath}`);
+}
+
+// Create a simple placeholder image if it doesn't exist
+const createPlaceholderImage = () => {
+    // Check if placeholder already exists
+    if (fs.existsSync(placeholderPath)) {
+        console.log('Placeholder image already exists at:', placeholderPath);
+        return;
+    }
+    
+    console.log('Creating a default placeholder image...');
+    
+    // This is a base64 encoded 1x1 pixel JPEG
+    const base64Image = '/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAAQABAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A/fygkAZPAFNkkSKNpJHVEUZZmOAB6mvl/wCIvx/1HxLqVx4f8IahPpOlxkxzahBlJbr12n+GP05b61lUqRprU6KNCdeVonofiz4x+H/CF1Ha6nqKC8YZFrCpklx6heQPqa0/C/i/QPGFv5uilLe8UZks5iBIn4f3h7V8dW1vHbJtQtgkkljksfU+9XrLULrSL2O8spZLa4ibckiHBB/z2rH63fRG/wDZnLrNn//Z';
+    
+    try {
+        // Convert base64 to binary
+        const imageData = Buffer.from(base64Image, 'base64');
+        
+        // Write to file
+        fs.writeFileSync(placeholderPath, imageData);
+        console.log('Created placeholder image at:', placeholderPath);
+    } catch (error) {
+        console.error('Failed to create placeholder image:', error);
+    }
+};
+
+// Create the placeholder image if needed
+createPlaceholderImage();
+
+// Serve images from the image_path directory
+app.use('/images', express.static(imagePath));
+
+// Serve placeholder image
+app.use('/placeholder.jpg', express.static(placeholderPath));
 
 // Debug logging
-console.log(`Images are being served from: ${path.join(__dirname, 'image_path')}`);
+console.log(`Images are being served from: ${imagePath}`);
 console.log(`They will be accessible at: http://localhost:3000/images/...`);
-app.use('/placeholder.jpg', express.static(path.join(__dirname, 'placeholder.jpg')));
+console.log(`Placeholder image is served at: http://localhost:3000/placeholder.jpg`);
 
 app.use('/listings', listingsModule.router);
 

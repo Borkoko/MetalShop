@@ -49,6 +49,28 @@ function displayPlaceholderImage() {
     document.querySelector('.image-counter').style.display = 'none';
 }
 
+// Fetch listing data from the server
+async function fetchListing(listingId) {
+    try {
+        const response = await fetch(`http://localhost:3000/listings/${listingId}`);
+        
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const listing = await response.json();
+        
+        // Display the listing data
+        displayListing(listing);
+        
+        // Fetch related listings (same band or similar items)
+        fetchRelatedListings(listing.bandId);
+    } catch (error) {
+        console.error('Error fetching listing:', error);
+        showError("Listing not found or has been removed");
+    }
+}
+
 // Fetch related listings (same band or similar items)
 async function fetchRelatedListings(bandId) {
     try {
@@ -102,9 +124,28 @@ function createListingCard(listing) {
     // Format price
     const formattedPrice = parseFloat(listing.price).toFixed(2);
     
+    // Ensure image URL is properly formatted
+    let imageUrl = listing.imageUrl;
+    
+    // If image URL is missing or invalid, use placeholder
+    if (!imageUrl) {
+        imageUrl = 'http://localhost:3000/placeholder.jpg';
+    } else {
+        // If image path is relative (starts with /)
+        if (imageUrl.startsWith('/')) {
+            imageUrl = `http://localhost:3000${imageUrl}`;
+        }
+        // If image doesn't start with http:// or https://, add the full URL
+        else if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+            imageUrl = `http://localhost:3000/${imageUrl}`;
+        }
+    }
+    
     card.innerHTML = `
         <div class="listing-image">
-            <img src="${listing.imageUrl || 'placeholder.jpg'}" alt="${listing.bandName} merchandise">
+            <img src="${imageUrl}" 
+                 alt="${listing.bandName} merchandise"
+                 onerror="this.onerror=null; this.src='http://localhost:3000/placeholder.jpg';">
         </div>
         <div class="card-details">
             <h3 class="card-band">${listing.bandName}</h3>
@@ -204,53 +245,6 @@ async function addToWishlist(userId, listingId) {
     }
 }
 
-// Show error message
-function showError(message) {
-    document.getElementById('listing-loading').style.display = 'none';
-    const errorElement = document.getElementById('listing-error');
-    errorElement.querySelector('span').textContent = message;
-    errorElement.style.display = 'flex';
-}
-
-// Show notification
-function showNotification(message, type = 'info') {
-    const notification = document.getElementById('notification');
-    const messageElement = notification.querySelector('.notification-message');
-    
-    // Set message and type
-    messageElement.textContent = message;
-    notification.className = 'notification';
-    notification.classList.add(type);
-    notification.classList.add('visible');
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-        notification.classList.remove('visible');
-    }, 3000);
-}
-
-// Fetch listing data from the server
-async function fetchListing(listingId) {
-    try {
-        const response = await fetch(`http://localhost:3000/listings/${listingId}`);
-        
-        if (!response.ok) {
-            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-        }
-        
-        const listing = await response.json();
-        
-        // Display the listing data
-        displayListing(listing);
-        
-        // Fetch related listings (same band or similar items)
-        fetchRelatedListings(listing.bandId);
-    } catch (error) {
-        console.error('Error fetching listing:', error);
-        showError("Listing not found or has been removed");
-    }
-}
-
 // Display listing data on the page
 function displayListing(listing) {
     // Hide loading indicator and show content
@@ -265,7 +259,7 @@ function displayListing(listing) {
     document.getElementById('price').textContent = `$${parseFloat(listing.price).toFixed(2)}`;
     document.getElementById('size').textContent = listing.size;
     document.getElementById('gender').textContent = listing.gender;
-    document.getElementById('condition').textContent = listing.condition;
+    document.getElementById('condition').textContent = listing.item_condition;
     document.getElementById('description').textContent = listing.description;
     document.getElementById('seller-name').textContent = `${listing.fname} ${listing.lname.charAt(0)}.`;
     
@@ -344,4 +338,29 @@ function setupImages(images) {
         currentIndex = (currentIndex + 1) % images.length;
         updateMainImage(images, currentIndex);
     });
+}
+
+// Show error message
+function showError(message) {
+    document.getElementById('listing-loading').style.display = 'none';
+    const errorElement = document.getElementById('listing-error');
+    errorElement.querySelector('span').textContent = message;
+    errorElement.style.display = 'flex';
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.getElementById('notification');
+    const messageElement = notification.querySelector('.notification-message');
+    
+    // Set message and type
+    messageElement.textContent = message;
+    notification.className = 'notification';
+    notification.classList.add(type);
+    notification.classList.add('visible');
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('visible');
+    }, 3000);
 }
