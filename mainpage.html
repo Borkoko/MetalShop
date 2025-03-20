@@ -47,55 +47,6 @@
             </div>
         </section>
 
-        <section class="bands-section">
-            <div class="section-header">
-                <h2>Popular Bands</h2>
-            </div>
-            <div class="band-logos" id="popular-bands">
-                <!-- Band logos will be loaded here -->
-                <div class="loading-indicator">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <span>Loading popular bands...</span>
-                </div>
-            </div>
-        </section>
-
-        <section class="how-it-works">
-            <h2>How It Works</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-icon">
-                        <i class="fas fa-camera"></i>
-                    </div>
-                    <h3>List Your Items</h3>
-                    <p>Take photos and create listings for your metal merchandise</p>
-                </div>
-                <div class="step">
-                    <div class="step-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <h3>Connect With Buyers</h3>
-                    <p>Chat directly with interested buyers about your items</p>
-                </div>
-                <div class="step">
-                    <div class="step-icon">
-                        <i class="fas fa-hand-holding-usd"></i>
-                    </div>
-                    <h3>Sell & Ship</h3>
-                    <p>Complete the sale and ship your items to their new owners</p>
-                </div>
-            </div>
-            <a href="createListing.html" class="cta-button">Start Selling Today</a>
-        </section>
-
-        <section class="join-community">
-            <div class="join-content">
-                <h2>Join Our Metal Community</h2>
-                <p>Connect with thousands of metal fans and collectors worldwide</p>
-                <a href="register.html" class="join-button">Create an Account</a>
-            </div>
-        </section>
-
         <footer>
             <div class="footer-content">
                 <div class="footer-logo">MetalShop</div>
@@ -143,145 +94,97 @@
     <!-- Main page script -->
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-    // Load featured listings
-    loadFeaturedListings();
-    
-    // Load popular bands
-    loadPopularBands();
-});
-// Helper function to ensure URLs are absolute
-function ensureAbsoluteUrl(url) {
-    // If URL is null or undefined, use placeholder
-    if (!url) {
-        return 'http://localhost:3000/placeholder.jpg';
-    }
-    
-    // If the URL already starts with http, return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-        return url;
-    }
-    
-    // If the URL starts with a slash, append to server URL
-    if (url.startsWith('/')) {
-        return `http://localhost:3000${url}`;
-    }
-    
-    // Otherwise, add full server path
-    return `http://localhost:3000/${url}`;
-}
-// Load featured listings
-function loadFeaturedListings() {
-    fetch("http://localhost:3000/listings?limit=6")
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to fetch listings");
-            return response.json();
-        })
-        .then(listings => {
-            const container = document.getElementById("featured-listings");
-            
-            // Clear loading indicator
-            container.innerHTML = "";
-            
-            if (listings.length === 0) {
-                container.innerHTML = "<p class='no-items'>No listings available yet.</p>";
-                return;
+            // Load featured listings
+            loadFeaturedListings();
+        });
+        
+        // Helper function to ensure URLs are absolute
+        function ensureAbsoluteUrl(url) {
+            // If URL is null or undefined, use placeholder
+            if (!url) {
+                return 'http://localhost:3000/placeholder.jpg';
             }
             
-            // Create listing cards
-            listings.forEach(listing => {
-                const card = createListingCard(listing);
-                container.appendChild(card);
-            });
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            const container = document.getElementById("featured-listings");
-            container.innerHTML = "<p class='error-message'>Failed to load listings. Please try again later.</p>";
-        });
-}
-
-// Create a listing card element
-// Create a listing card element
-function createListingCard(listing) {
-    const card = document.createElement("div");
-    card.className = "listing-card";
-    
-    // Format price
-    const formattedPrice = parseFloat(listing.price).toFixed(2);
-    
-    // Properly format the image URL
-    const imageUrl = ensureAbsoluteUrl(listing.imageUrl);
-    
-    card.innerHTML = `
-        <div class="listing-image">
-            <img src="${imageUrl}" 
-                 alt="${listing.bandName} merchandise"
-                 onerror="this.onerror=null; this.src='http://localhost:3000/placeholder.jpg';">
-        </div>
-        <div class="listing-details">
-            <h3 class="listing-band">${listing.bandName}</h3>
-            <div class="listing-meta">
-                <span class="listing-size">${listing.size}</span>
-                <span class="listing-gender">${listing.gender}</span>
-                <span class="listing-condition">${listing.condition || ''}</span>
-            </div>
-            <div class="listing-price">$${formattedPrice}</div>
-        </div>
-    `;
-    
-    // Make card clickable
-    card.addEventListener("click", () => {
-        window.location.href = `listing.html?id=${listing.idTShirt}`;
-    });
-    
-    return card;
-}
-
-// Load popular bands
-function loadPopularBands() {
-    fetch("http://localhost:3000/bands")
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to fetch bands");
-            return response.json();
-        })
-        .then(bands => {
-            const container = document.getElementById("popular-bands");
-            
-            // Clear loading indicator
-            container.innerHTML = "";
-            
-            if (bands.length === 0) {
-                container.innerHTML = "<p class='no-items'>No bands available yet.</p>";
-                return;
+            // If the URL already starts with http, return as is
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return url;
             }
             
-            // Take only the first 8 bands (or all if less than 8)
-            const displayBands = bands.slice(0, 8);
+            // If the URL starts with a slash, append to server URL
+            if (url.startsWith('/')) {
+                return `http://localhost:3000${url}`;
+            }
             
-            // Create band logos
-            displayBands.forEach(band => {
-                const bandLogo = document.createElement("div");
-                bandLogo.className = "band-logo";
-                
-                // Since we don't have actual logos, use the first letter as a placeholder
-                const firstLetter = band.name.charAt(0).toUpperCase();
-                
-                bandLogo.innerHTML = `
-                    <a href="listings.html?bandId=${band.idBand}" class="band-link">
-                        <div class="logo-placeholder">${firstLetter}</div>
-                        <span class="band-name">${band.name}</span>
-                    </a>
-                `;
-                
-                container.appendChild(bandLogo);
+            // Otherwise, add full server path
+            return `http://localhost:3000/${url}`;
+        }
+        
+        // Load featured listings
+        function loadFeaturedListings() {
+            fetch("http://localhost:3000/listings?limit=6")
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to fetch listings");
+                    return response.json();
+                })
+                .then(listings => {
+                    const container = document.getElementById("featured-listings");
+                    
+                    // Clear loading indicator
+                    container.innerHTML = "";
+                    
+                    if (listings.length === 0) {
+                        container.innerHTML = "<p class='no-items'>No listings available yet.</p>";
+                        return;
+                    }
+                    
+                    // Create listing cards
+                    listings.forEach(listing => {
+                        const card = createListingCard(listing);
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    const container = document.getElementById("featured-listings");
+                    container.innerHTML = "<p class='error-message'>Failed to load listings. Please try again later.</p>";
+                });
+        }
+
+        // Create a listing card element
+        function createListingCard(listing) {
+            const card = document.createElement("div");
+            card.className = "listing-card";
+            
+            // Format price
+            const formattedPrice = parseFloat(listing.price).toFixed(2);
+            
+            // Properly format the image URL
+            const imageUrl = ensureAbsoluteUrl(listing.imageUrl);
+            
+            card.innerHTML = `
+                <div class="listing-image">
+                    <img src="${imageUrl}" 
+                         alt="${listing.bandName} merchandise"
+                         onerror="this.onerror=null; this.src='http://localhost:3000/placeholder.jpg';">
+                </div>
+                <div class="listing-details">
+                    <h3 class="listing-band">${listing.bandName}</h3>
+                    <div class="listing-meta">
+                        <span class="listing-size">${listing.size}</span>
+                        <span class="listing-gender">${listing.gender}</span>
+                        <span class="listing-condition">${listing.condition || ''}</span>
+                    </div>
+                    <div class="listing-price">$${formattedPrice}</div>
+                </div>
+            `;
+            
+            // Make card clickable
+            card.addEventListener("click", () => {
+                window.location.href = `listing.html?id=${listing.idTShirt}`;
             });
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            const container = document.getElementById("popular-bands");
-            container.innerHTML = "<p class='error-message'>Failed to load bands. Please try again later.</p>";
-        });
-}
+            
+            return card;
+        }
     </script>
 </body>
 </html>
