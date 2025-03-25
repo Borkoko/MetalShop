@@ -126,19 +126,27 @@
 }
 
 .chat-window-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 1rem;
     border-bottom: 1px solid var(--border-dark);
     background: linear-gradient(to right, #111, #222);
-    display: flex;
-    align-items: center;
     position: relative;
+}
+
+.chat-window-title {
+    flex-grow: 1;
+    text-align: center;
 }
 
 .chat-window-title h3 {
     margin: 0;
     color: var(--text-light);
-    text-align: center;
-    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .chat-close-btn {
@@ -150,6 +158,7 @@
     font-size: 1.5rem;
     cursor: pointer;
     transition: var(--transition);
+    z-index: 10;
 }
 
 .chat-close-btn:hover {

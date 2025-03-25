@@ -192,8 +192,29 @@ function initiateChatWithSeller() {
         return;
     }
 
-    // Redirect to chat page with seller information
-    window.location.href = `chat.html?sellerId=${listingData.userId}&tshirtId=${listingData.idTShirt}`;
+    // First create the chat
+    fetch('http://localhost:3000/chat/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            senderId: userId,
+            receiverId: listingData.userId,
+            tshirtId: listingData.idTShirt
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Chat creation response:', data);
+        
+        // Redirect to chat page with seller information
+        window.location.href = `chat.html?sellerId=${listingData.userId}&tshirtId=${listingData.idTShirt}`;
+    })
+    .catch(error => {
+        console.error('Error creating chat:', error);
+        showNotification('Failed to start chat with seller', 'error');
+    });
 }
 
 // Show notification

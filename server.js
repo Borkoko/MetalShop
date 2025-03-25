@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
@@ -534,10 +535,10 @@ app.get('/chat/history', async (req, res) => {
     }
 });
 
-// Get all chats for a user
 app.get('/chat/list/:userId', async (req, res) => {
     const userId = req.params.userId;
     console.log(`Received request for chat list. User ID: ${userId}`);
+    
     // Input validation
     if (!userId) {
         console.error('Chat list request: No user ID provided');
@@ -560,7 +561,7 @@ app.get('/chat/list/:userId', async (req, res) => {
             WITH UserChats AS (
                 SELECT DISTINCT 
                     t.idTShirt,
-                    t.imageUrl,
+                    (SELECT imageUrl FROM tshirt_images WHERE tshirtId = t.idTShirt ORDER BY id ASC LIMIT 1) AS imageUrl,
                     b.name AS bandName,
                     t.size,
                     CASE 

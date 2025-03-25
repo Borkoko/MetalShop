@@ -14,7 +14,115 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Set up event listeners
     setupChatListeners();
+
+    // Check if chat parameters are in URL for direct chat initiation
+    const urlParams = new URLSearchParams(window.location.search);
+    const sellerId = urlParams.get('sellerId');
+    const tshirtId = urlParams.get('tshirtId');
+    
+    if (sellerId && tshirtId) {
+        initiateChat(sellerId, tshirtId);
+    }
 });
+
+// Open chat window for a specific tshirt and user
+function openChatWindow(tshirtId, otherUserId) {
+    const userId = localStorage.getItem('userId');
+    const chatWindow = document.getElementById('chat-window');
+    const chatMessages = document.getElementById('chat-messages');
+
+    // Store tshirt and user IDs on the chat window for later use
+    chatWindow.dataset.tshirtId = tshirtId;
+    chatWindow.dataset.otherUserId = otherUserId;
+
+    // Make the chat window visible
+    chatWindow.classList.add('active');
+
+    // Clear previous messages
+    chatMessages.innerHTML = '';
+
+    // Fetch chat history
+    fetch(`http://localhost:3000/chat/history?senderId=${userId}&receiverId=${otherUserId}&tshirtId=${tshirtId}`)
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch chat history');
+        return response.json();
+    })
+    .then(messages => {
+        // Render messages
+        if (messages.length === 0) {
+            chatMessages.innerHTML = `
+                <div class="no-chat-selected">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>Start a conversation</p>
+                </div>
+            `;
+            return;
+        }
+
+        messages.forEach(msg => {
+            const messageElement = document.createElement('div');
+            const isSentByCurrentUser = msg.senderId === parseInt(userId);
+            
+            messageElement.classList.add('chat-message');
+            messageElement.classList.add(isSentByCurrentUser ? 'sent' : 'received');
+            
+            messageElement.innerHTML = `
+                <div class="message-content">${msg.message}</div>
+                <div class="message-time">${formatMessageTime(msg.sentAt)}</div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+        });
+
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    })
+    .catch(error => {
+        console.error('Error fetching chat history:', error);
+        chatMessages.innerHTML = `
+            <div class="no-chat-selected">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Failed to load chat history</p>
+            </div>
+        `;
+    });
+}
+
+// Initiate a new chat from a listing
+function initiateChat(sellerId, tshirtId) {
+    const userId = localStorage.getItem('userId');
+    
+    // Prevent chatting with self
+    if (userId === sellerId) {
+        showNotification('You cannot chat with yourself', 'error');
+        return;
+    }
+
+    // Create chat
+    fetch('http://localhost:3000/chat/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            senderId: userId,
+            receiverId: sellerId,
+            tshirtId: tshirtId
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to create chat');
+        return response.json();
+    })
+    .then(() => {
+        // Open the chat window
+        openChatWindow(tshirtId, sellerId);
+    })
+    .catch(error => {
+        console.error('Chat initiation error:', error);
+        showNotification('Failed to start chat. Please try again.', 'error');
+    });
+}
 
 function loadChatList(userId) {
     const chatListContainer = document.getElementById('chat-list');
@@ -142,6 +250,7 @@ function setupChatListeners() {
 
     // Close chat window
     chatCloseBtn.addEventListener('click', () => {
+        const chatWindow = document.getElementById('chat-window');
         chatWindow.classList.remove('active');
     });
 }
@@ -163,4 +272,26 @@ function ensureAbsoluteUrl(url) {
     }
     
     return `http://localhost:3000/${url}`;
+}
+
+// Optional: Show notification for error/success
+function showNotification(message, type = 'info') {
+    const notification = document.getElementById('notification');
+    if (!notification) return;
+
+    const messageElement = notification.querySelector('.notification-message');
+    if (!messageElement) return;
+    
+    // Set message
+    messageElement.textContent = message;
+    
+    // Reset classes and add new ones
+    notification.className = 'notification';
+    notification.classList.add(type);
+    notification.classList.add('visible');
+    
+    // Hide after a delay
+    setTimeout(() => {
+        notification.classList.remove('visible');
+    }, 3000);
 }
