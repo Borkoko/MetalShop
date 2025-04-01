@@ -198,6 +198,152 @@ app.get('/users/:id', (req, res) => {
     });
 });
 
+app.get('/listings/user/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    
+    try {
+        // Fetch user's listings
+        const [listings] = await pool.promise().query(`
+            SELECT t.*, b.name as bandName, u.fname, u.lname 
+            FROM tshirts t
+            JOIN bands b ON t.bandId = b.idBand
+            JOIN users u ON t.userId = u.idUsers
+            WHERE t.userId = ?
+            ORDER BY t.createdAt DESC
+        `, [userId]);
+        
+        // For each listing, get the main image from the tshirt_images table
+        for (let listing of listings) {
+            const [images] = await pool.promise().query(`
+                SELECT imageUrl FROM tshirt_images 
+                WHERE tshirtId = ? 
+                ORDER BY id ASC LIMIT 1
+            `, [listing.idTShirt]);
+            
+            if (images.length > 0) {
+                listing.imageUrl = images[0].imageUrl;
+            } else if (!listing.imageUrl) {
+                listing.imageUrl = '/placeholder.jpg';
+            }
+        }
+        
+        res.json(listings);
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Delete a listing
+app.delete('/listings/:id', async (req, res) => {
+    const listingId = req.params.id;
+    const { userId } = req.body;
+    
+    // Validate input
+    if (!userId) {
+        return res.status(400).json({ error: 'User ID is required' });
+    }
+    
+    try {
+        // Check if the listing exists and belongs to the user
+        const [listings] = await pool.promise().query(
+            'SELECT * FROM tshirts WHERE idTShirt = ? AND userId = ?',
+            [listingId, userId]
+        );
+        
+        if (listings.length === 0) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to delete this listing or it does not exist' 
+            });
+        }
+        
+        // Get image paths before deletion to clean up files
+        const [images] = await pool.promise().query(
+            'SELECT imageUrl FROM tshirt_images WHERE tshirtId = ?',
+            [listingId]
+        );
+        
+        // Delete the listing (tshirt_images will be deleted by CASCADE)
+        await pool.promise().query(
+            'DELETE FROM tshirts WHERE idTShirt = ?',
+            [listingId]
+        );
+        
+        // Clean up image files (optional, can be implemented if needed)
+        // This would require parsing the imageUrl and removing the actual files
+        
+        res.json({ message: 'Listing deleted successfully' });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Update user profile
+app.put('/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { fname, lname, email, password } = req.body;
+    
+    // Validate input
+    if (!fname || !lname || !email) {
+        return res.status(400).json({ error: 'First name, last name, and email are required' });
+    }
+    
+    try {
+        // Check if the user exists
+        const [users] = await pool.promise().query(
+            'SELECT * FROM Users WHERE idUsers = ?',
+            [userId]
+        );
+        
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Check if the email is already in use by a different user
+        if (email !== users[0].email) {
+            const [existingUsers] = await pool.promise().query(
+                'SELECT * FROM Users WHERE email = ? AND idUsers != ?',
+                [email, userId]
+            );
+            
+            if (existingUsers.length > 0) {
+                return res.status(400).json({ error: 'Email already in use' });
+            }
+        }
+        
+        // Update query and parameters
+        let query = 'UPDATE Users SET fname = ?, lname = ?, email = ?';
+        let params = [fname, lname, email];
+        
+        // If password is provided, hash it and include in update
+        if (password) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            query += ', password = ?';
+            params.push(hashedPassword);
+        }
+        
+        // Add WHERE clause
+        query += ' WHERE idUsers = ?';
+        params.push(userId);
+        
+        // Execute update
+        await pool.promise().query(query, params);
+        
+        // Return updated user data
+        res.json({ 
+            message: 'Profile updated successfully',
+            userId: userId,
+            firstName: fname,
+            lastName: lname,
+            email: email
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // Check if email exists endpoint
 app.get('/check-email', async (req, res) => {
     const email = req.query.email;

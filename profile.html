@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | MetalShop</title>
+    <link rel="stylesheet" href="mainpage1.css">
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button"><i class="fas fa-comment"></i> Chat</a>
+                <a href="profile.html" class="nav-button active"><i class="fas fa-user"></i> Profile</a>
+                <a href="createListing.html" class="nav-button create-button"><i class="fas fa-plus"></i> Sell</a>
+            </nav>
+        </header>
+
+        <main class="profile-page">
+            <div class="page-title">
+                <h1><i class="fas fa-user-circle"></i> My Profile</h1>
+                <p>Manage your account and listings</p>
+            </div>
+
+            <div class="profile-container">
+                <!-- Profile Information Section -->
+                <section class="profile-section profile-info">
+                    <div class="section-header">
+                        <h2>Account Information</h2>
+                    </div>
+                    <div class="profile-details">
+                        <div class="profile-detail">
+                            <span class="detail-label"><i class="fas fa-user"></i> Name:</span>
+                            <span class="detail-value" id="profile-name">Loading...</span>
+                        </div>
+                        <div class="profile-detail">
+                            <span class="detail-label"><i class="fas fa-envelope"></i> Email:</span>
+                            <span class="detail-value" id="profile-email">Loading...</span>
+                        </div>
+                        <div class="profile-detail">
+                            <span class="detail-label"><i class="fas fa-calendar-alt"></i> Member Since:</span>
+                            <span class="detail-value" id="profile-joined">Loading...</span>
+                        </div>
+                        <button id="edit-profile-btn" class="secondary-button">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Tabs for My Listings and Wishlist -->
+                <section class="profile-section profile-tabs">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="my-listings">
+                            <i class="fas fa-tshirt"></i> My Listings
+                        </button>
+                        <button class="tab-btn" data-tab="wishlist">
+                            <i class="fas fa-heart"></i> Wishlist
+                        </button>
+                    </div>
+                    
+                    <!-- My Listings Tab Content -->
+                    <div class="tab-content active" id="my-listings-content">
+                        <div class="listings-header">
+                            <h3>Your Listed Items</h3>
+                            <a href="createListing.html" class="primary-button">
+                                <i class="fas fa-plus"></i> Create New Listing
+                            </a>
+                        </div>
+                        
+                        <div id="my-listings-container" class="listings-grid">
+                            <div class="loading-indicator">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Loading your listings...</span>
+                            </div>
+                            <!-- Listings will be inserted here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Wishlist Tab Content -->
+                    <div class="tab-content" id="wishlist-content">
+                        <div class="listings-header">
+                            <h3>Your Wishlist</h3>
+                        </div>
+                        
+                        <div id="wishlist-container" class="listings-grid">
+                            <div class="loading-indicator">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Loading your wishlist...</span>
+                            </div>
+                            <!-- Wishlist items will be inserted here -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">MetalShop</div>
+                <div class="social-links">
+                    <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 MetalShop - All Rights Reserved
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modal for confirming deletion -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this listing?</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-delete" class="secondary-button">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button id="confirm-delete" class="delete-button">
+                    <i class="fas fa-trash"></i> Delete Listing
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-profile-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> Edit Profile</h3>
+                <button id="close-edit-modal" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-profile-form">
+                    <div class="form-group">
+                        <label for="edit-fname">First Name</label>
+                        <input type="text" id="edit-fname" name="fname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-lname">Last Name</label>
+                        <input type="text" id="edit-lname" name="lname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">Email</label>
+                        <input type="email" id="edit-email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-password">New Password (leave blank to keep current)</label>
+                        <input type="password" id="edit-password" name="password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-edit" class="secondary-button">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button id="save-profile" class="primary-button">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification system -->
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>
