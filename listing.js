@@ -1,4 +1,3 @@
-// Global variables
 let listingData = null;
 
 // Initialize the page
@@ -29,10 +28,36 @@ function fetchListingDetails(listingId) {
         .then(data => {
             listingData = data;
             populateListingDetails(data);
+            checkWishlistStatus(listingId);
         })
         .catch(error => {
             console.error('Error:', error);
             showErrorPage('Failed to load listing details');
+        });
+}
+
+// Check if this listing is already in the user's wishlist
+function checkWishlistStatus(listingId) {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    fetch(`http://localhost:3000/wishlist/${userId}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to fetch wishlist');
+            return response.json();
+        })
+        .then(wishlistItems => {
+            const wishlistBtn = document.getElementById('wishlist-btn');
+            const isInWishlist = wishlistItems.some(item => 
+                item.tshirtId === parseInt(listingId)
+            );
+
+            if (isInWishlist) {
+                updateWishlistButton(true);
+            }
+        })
+        .catch(error => {
+            console.error('Wishlist check error:', error);
         });
 }
 
@@ -126,19 +151,32 @@ function setupEventListeners(listingId) {
     contactSellerBtn.addEventListener('click', initiateChatWithSeller);
 }
 
-// Add item to wishlist
+// Update wishlist button UI
+function updateWishlistButton(isInWishlist) {
+    const wishlistBtn = document.getElementById('wishlist-btn');
+    
+    if (isInWishlist) {
+        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i> Remove from Wishlist';
+        wishlistBtn.classList.add('in-wishlist');
+    } else {
+        wishlistBtn.innerHTML = '<i class="far fa-heart"></i> Add to Wishlist';
+        wishlistBtn.classList.remove('in-wishlist');
+    }
+}
+
+// Add/Remove item from wishlist
 function addToWishlist() {
     // Check if user is logged in
     const userId = localStorage.getItem('userId');
     if (!userId) {
-        showNotification('Please log in to add to wishlist', 'error');
+        showNotification('Please log in to modify wishlist', 'error');
         window.location.href = 'login.html';
         return;
     }
 
     // Ensure we have a listing
     if (!listingData) {
-        showNotification('Unable to add listing to wishlist', 'error');
+        showNotification('Unable to modify wishlist', 'error');
         return;
     }
 
@@ -155,20 +193,19 @@ function addToWishlist() {
     })
     .then(response => {
         if (!response.ok) {
-            // Check if it's a duplicate entry
-            if (response.status === 400) {
-                throw new Error('Item already in wishlist');
-            }
-            throw new Error('Failed to add to wishlist');
+            throw new Error('Failed to modify wishlist');
         }
         return response.json();
     })
-    .then(() => {
-        showNotification('Added to wishlist successfully!', 'success');
-        // Optionally change button state
-        const wishlistBtn = document.getElementById('wishlist-btn');
-        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i> Added to Wishlist';
-        wishlistBtn.disabled = true;
+    .then((data) => {
+        // Toggle wishlist button based on action
+        if (data.action === 'added') {
+            showNotification('Added to wishlist successfully!', 'success');
+            updateWishlistButton(true);
+        } else {
+            showNotification('Removed from wishlist successfully!', 'info');
+            updateWishlistButton(false);
+        }
     })
     .catch(error => {
         console.error('Wishlist error:', error);

@@ -247,7 +247,16 @@ app.post('/wishlist', async (req, res) => {
         );
         
         if (existing.length > 0) {
-            return res.status(400).json({ error: 'Item already in wishlist' });
+            // Item exists, so remove it from wishlist
+            await pool.promise().query(
+                'DELETE FROM wishlist WHERE userId = ? AND tshirtId = ?',
+                [userId, tshirtId]
+            );
+            
+            return res.json({ 
+                message: 'Removed from wishlist successfully',
+                action: 'removed'
+            });
         }
         
         // Add to wishlist
@@ -256,13 +265,15 @@ app.post('/wishlist', async (req, res) => {
             [userId, tshirtId]
         );
         
-        res.status(201).json({ message: 'Added to wishlist successfully' });
+        res.status(201).json({ 
+            message: 'Added to wishlist successfully',
+            action: 'added'
+        });
     } catch (err) {
         console.error('Database error:', err);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
-
 // Get wishlist items
 app.get('/wishlist/:userId', async (req, res) => {
     const userId = req.params.userId;
