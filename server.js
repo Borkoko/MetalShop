@@ -280,7 +280,7 @@ app.get('/wishlist/:userId', async (req, res) => {
     
     try {
         const [items] = await pool.promise().query(`
-            SELECT w.*, t.*, b.name as bandName, t.item_condition as condition
+            SELECT w.*, t.*, b.name as bandName, t.item_condition as item_condition
             FROM wishlist w
             JOIN tshirts t ON w.tshirtId = t.idTShirt
             JOIN bands b ON t.bandId = b.idBand
