@@ -98,6 +98,16 @@
     color: white;
 }
 
+.wishlist-btn.in-wishlist {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary-dark);
+}
+
+.wishlist-btn.in-wishlist:hover {
+    background: var(--primary-dark);
+}
+
 .listing-meta-info {
     display: flex;
     gap: 1rem;

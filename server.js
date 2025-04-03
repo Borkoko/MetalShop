@@ -177,7 +177,7 @@ app.post('/login', (req, res) => {
 app.get('/users/:id', (req, res) => {
     const userId = req.params.id;
     
-    pool.query('SELECT idUsers, fname, lname, email, createdAt FROM Users WHERE idUsers = ?', [userId], (err, results) => {
+    pool.query('SELECT idUsers, fname, lname, email, isAdmin, createdAt FROM Users WHERE idUsers = ?', [userId], (err, results) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).json({ error: 'Internal Server Error' });
@@ -193,6 +193,7 @@ app.get('/users/:id', (req, res) => {
             firstName: user.fname,
             lastName: user.lname,
             email: user.email,
+            isAdmin: !!user.isAdmin, // Convert to boolean
             createdAt: user.createdAt
         });
     });

@@ -80,7 +80,9 @@ function checkIfAdmin(userId) {
             return response.json();
         })
         .then(userData => {
+            console.log("Checking admin status for user:", userData);
             if (userData.isAdmin) {
+                console.log("User is admin, updating UI");
                 // Store admin status in localStorage
                 localStorage.setItem('isAdmin', 'true');
                 
@@ -98,6 +100,7 @@ function checkIfAdmin(userId) {
                     
                     // Add the link to navigation
                     nav.appendChild(adminLink);
+                    console.log("Admin link added to navigation");
                 }
                 
                 // If on admin.html, verify access (prevents URL navigation to admin page by non-admins)
@@ -105,6 +108,7 @@ function checkIfAdmin(userId) {
                     console.log('Admin access verified');
                 }
             } else {
+                console.log("User is not admin");
                 // Remove admin status if set
                 localStorage.removeItem('isAdmin');
                 
@@ -118,7 +122,7 @@ function checkIfAdmin(userId) {
         .catch(error => {
             console.error("Error checking admin status:", error);
         });
-}
+    }
 
 // Refresh user data from the server
 function refreshUserData(userId) {

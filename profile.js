@@ -21,15 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up modals
     setupModals();
-    fetch(`http://localhost:3000/users/${userId}`)
-    .then(response => response.json())
-    .then(userData => {
-        if (userData.isAdmin) {
-            // Add admin section to profile
-            addAdminSection();
-        }
-    })
-    .catch(error => console.error('Error checking admin status:', error));
+    
+    // Check if user is admin and add admin section if needed
+    checkAdminStatus(userId);
 });
 
 /**

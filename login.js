@@ -99,6 +99,11 @@ async function handleLogin(event) {
             localStorage.setItem("isLoggedIn", "true");
             localStorage.setItem("loginTime", Date.now().toString());
             
+            // Check if user is admin and store that info
+            if (data.isAdmin) {
+                localStorage.setItem("isAdmin", "true");
+            }
+            
             // Show success message
             showMessage(messageContainer, "Login successful! Redirecting...", "success");
             
