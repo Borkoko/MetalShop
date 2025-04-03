@@ -344,6 +344,272 @@ app.put('/users/:id', async (req, res) => {
     }
 });
 
+// Admin endpoint to delete any listing
+app.delete('/admin/listings/:id', async (req, res) => {
+    const listingId = req.params.id;
+    const { adminId } = req.body;
+    
+    if (!adminId) {
+        return res.status(400).json({ error: 'Admin ID is required' });
+    }
+    
+    try {
+        // Verify the user is an admin
+        const [adminCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [adminId]
+        );
+        
+        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to perform this action' 
+            });
+        }
+        
+        // Check if the listing exists
+        const [listings] = await pool.promise().query(
+            'SELECT * FROM tshirts WHERE idTShirt = ?',
+            [listingId]
+        );
+        
+        if (listings.length === 0) {
+            return res.status(404).json({ 
+                error: 'Listing not found' 
+            });
+        }
+        
+        // Get image paths before deletion to clean up files
+        const [images] = await pool.promise().query(
+            'SELECT imageUrl FROM tshirt_images WHERE tshirtId = ?',
+            [listingId]
+        );
+        
+        // Delete the listing (tshirt_images will be deleted by CASCADE)
+        await pool.promise().query(
+            'DELETE FROM tshirts WHERE idTShirt = ?',
+            [listingId]
+        );
+        
+        // Log the admin action
+        console.log(`Admin ${adminId} deleted listing ${listingId}`);
+        
+        res.json({ 
+            message: 'Listing deleted successfully',
+            deletedBy: 'admin',
+            adminId: adminId
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Admin endpoint to get all users
+app.get('/admin/users', async (req, res) => {
+    const { adminId } = req.query;
+    
+    if (!adminId) {
+        return res.status(400).json({ error: 'Admin ID is required' });
+    }
+    
+    try {
+        // Verify the user is an admin
+        const [adminCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [adminId]
+        );
+        
+        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to perform this action' 
+            });
+        }
+        
+        // Get all users (excluding password field)
+        const [users] = await pool.promise().query(
+            'SELECT idUsers, fname, lname, email, isAdmin, createdAt FROM users'
+        );
+        
+        res.json(users);
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Admin endpoint to update user's admin status
+app.patch('/admin/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { adminId, isAdmin } = req.body;
+    
+    if (!adminId || isAdmin === undefined) {
+        return res.status(400).json({ 
+            error: 'Admin ID and isAdmin status are required' 
+        });
+    }
+    
+    try {
+        // Verify the user is an admin
+        const [adminCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [adminId]
+        );
+        
+        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to perform this action' 
+            });
+        }
+        
+        // Check if target user exists
+        const [userCheck] = await pool.promise().query(
+            'SELECT * FROM users WHERE idUsers = ?',
+            [userId]
+        );
+        
+        if (userCheck.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Update user's admin status
+        await pool.promise().query(
+            'UPDATE users SET isAdmin = ? WHERE idUsers = ?',
+            [isAdmin ? 1 : 0, userId]
+        );
+        
+        // Log the admin action
+        console.log(`Admin ${adminId} updated user ${userId} admin status to ${isAdmin}`);
+        
+        res.json({ 
+            message: 'User admin status updated successfully',
+            userId: userId,
+            isAdmin: !!isAdmin
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Utility endpoint to fix image paths
+app.get('/fix-image-paths', async (req, res) => {
+    try {
+        // Check and update image paths in the tshirts table
+        const [tshirtRows] = await pool.promise().query('SELECT idTShirt, imageUrl FROM tshirts');
+        
+        let updates = 0;
+        
+        for (const row of tshirtRows) {
+            if (row.imageUrl) {
+                let newPath = row.imageUrl;
+                let needsUpdate = false;
+                
+                // If the path doesn't start with a slash, add one
+                if (!newPath.startsWith('/')) {
+                    newPath = '/' + newPath;
+                    needsUpdate = true;
+                }
+                
+                // If path has /uploads/ instead of /images/, replace it
+                if (newPath.includes('/uploads/')) {
+                    newPath = newPath.replace('/uploads/', '/images/');
+                    needsUpdate = true;
+                }
+                
+                if (needsUpdate) {
+                    await pool.promise().query(
+                        'UPDATE tshirts SET imageUrl = ? WHERE idTShirt = ?',
+                        [newPath, row.idTShirt]
+                    );
+                    updates++;
+                }
+            }
+        }
+        
+        // Check and update image paths in the tshirt_images table
+        const [imageRows] = await pool.promise().query('SELECT id, imageUrl FROM tshirt_images');
+        
+        for (const img of imageRows) {
+            if (img.imageUrl) {
+                let newPath = img.imageUrl;
+                let needsUpdate = false;
+                
+                // If the path doesn't start with a slash, add one
+                if (!newPath.startsWith('/')) {
+                    newPath = '/' + newPath;
+                    needsUpdate = true;
+                }
+                
+                // If path has /uploads/ instead of /images/, replace it
+                if (newPath.includes('/uploads/')) {
+                    newPath = newPath.replace('/uploads/', '/images/');
+                    needsUpdate = true;
+                }
+                
+                if (needsUpdate) {
+                    await pool.promise().query(
+                        'UPDATE tshirt_images SET imageUrl = ? WHERE id = ?',
+                        [newPath, img.id]
+                    );
+                    updates++;
+                }
+            }
+        }
+        
+        const [updatedTshirts] = await pool.promise().query('SELECT idTShirt, imageUrl FROM tshirts');
+        const [updatedImages] = await pool.promise().query('SELECT id, imageUrl FROM tshirt_images');
+        
+        res.json({
+            message: `Updated ${updates} image paths`,
+            tshirtListings: updatedTshirts,
+            tshirtImages: updatedImages
+        });
+    } catch (error) {
+        console.error('Error fixing image paths:', error);
+        res.status(500).json({ error: 'Failed to fix image paths' });
+    }
+});
+
+// Admin endpoint to get system stats
+app.get('/admin/stats', async (req, res) => {
+    const { adminId } = req.query;
+    
+    if (!adminId) {
+        return res.status(400).json({ error: 'Admin ID is required' });
+    }
+    
+    try {
+        // Verify the user is an admin
+        const [adminCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [adminId]
+        );
+        
+        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to perform this action' 
+            });
+        }
+        
+        // Get counts for different entities
+        const [listingsCount] = await pool.promise().query('SELECT COUNT(*) as count FROM tshirts');
+        const [usersCount] = await pool.promise().query('SELECT COUNT(*) as count FROM users');
+        const [bandsCount] = await pool.promise().query('SELECT COUNT(*) as count FROM bands');
+        const [messagesCount] = await pool.promise().query('SELECT COUNT(*) as count FROM chat');
+        
+        res.json({
+            listings: listingsCount[0].count,
+            users: usersCount[0].count,
+            bands: bandsCount[0].count,
+            messages: messagesCount[0].count,
+            serverTime: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 // Check if email exists endpoint
 app.get('/check-email', async (req, res) => {
     const email = req.query.email;

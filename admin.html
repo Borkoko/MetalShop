@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | MetalShop</title>
+    <link rel="stylesheet" href="mainpage1.css">
+    <link rel="stylesheet" href="admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="logo">
+                <a href="mainpage.html">MetalShop</a>
+            </div>
+            <nav>
+                <a href="listings.html" class="nav-button"><i class="fas fa-search"></i> Browse</a>
+                <a href="chat.html" class="nav-button"><i class="fas fa-comment"></i> Chat</a>
+                <a href="profile.html" class="nav-button"><i class="fas fa-user"></i> Profile</a>
+                <a href="admin.html" class="nav-button admin-button active"><i class="fas fa-shield-alt"></i> Admin</a>
+            </nav>
+        </header>
+
+        <main class="admin-page">
+            <div class="page-title">
+                <h1><i class="fas fa-shield-alt"></i> Admin Dashboard</h1>
+                <p>Manage the MetalShop platform</p>
+            </div>
+
+            <div class="admin-container">
+                <!-- Tabs for managing different aspects -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="listings">
+                        <i class="fas fa-tshirt"></i> Listings
+                    </button>
+                    <button class="tab-btn" data-tab="users">
+                        <i class="fas fa-users"></i> Users
+                    </button>
+                    <button class="tab-btn" data-tab="system">
+                        <i class="fas fa-cogs"></i> System
+                    </button>
+                </div>
+                
+                <!-- Listings Tab Content -->
+                <div class="tab-content active" id="listings-content">
+                    <div class="admin-panel-header">
+                        <h2>Manage Listings</h2>
+                        <div class="search-container">
+                            <input type="text" id="listing-search" placeholder="Search listings...">
+                            <button id="listing-search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-data-container">
+                        <div class="admin-data-header listings-header">
+                            <div class="header-cell">ID</div>
+                            <div class="header-cell">Image</div>
+                            <div class="header-cell">Band</div>
+                            <div class="header-cell">Size</div>
+                            <div class="header-cell">Price</div>
+                            <div class="header-cell">Seller</div>
+                            <div class="header-cell">Date</div>
+                            <div class="header-cell">Actions</div>
+                        </div>
+                        
+                        <div id="listings-table" class="admin-data-body">
+                            <div class="loading-indicator">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Loading listings...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Users Tab Content -->
+                <div class="tab-content" id="users-content">
+                    <div class="admin-panel-header">
+                        <h2>Manage Users</h2>
+                        <div class="search-container">
+                            <input type="text" id="user-search" placeholder="Search users...">
+                            <button id="user-search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-data-container">
+                        <div class="admin-data-header users-header">
+                            <div class="header-cell">ID</div>
+                            <div class="header-cell">Name</div>
+                            <div class="header-cell">Email</div>
+                            <div class="header-cell">Admin</div>
+                            <div class="header-cell">Joined</div>
+                            <div class="header-cell">Actions</div>
+                        </div>
+                        
+                        <div id="users-table" class="admin-data-body">
+                            <div class="loading-indicator">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>Loading users...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Tab Content -->
+                <div class="tab-content" id="system-content">
+                    <div class="admin-panel-header">
+                        <h2>System Information</h2>
+                    </div>
+                    
+                    <div class="admin-stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-tshirt"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Total Listings</h3>
+                                <p id="total-listings">Loading...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Total Users</h3>
+                                <p id="total-users">Loading...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Total Bands</h3>
+                                <p id="total-bands">Loading...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="stat-details">
+                                <h3>Total Messages</h3>
+                                <p id="total-messages">Loading...</p>

@@ -21,6 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up modals
     setupModals();
+    fetch(`http://localhost:3000/users/${userId}`)
+    .then(response => response.json())
+    .then(userData => {
+        if (userData.isAdmin) {
+            // Add admin section to profile
+            addAdminSection();
+        }
+    })
+    .catch(error => console.error('Error checking admin status:', error));
 });
 
 /**
@@ -56,9 +65,53 @@ function loadUserProfile(userId) {
         });
 }
 
-/**
- * Load and display user's listings
- */
+function addAdminSection() {
+    // Find a good place to add the admin section
+    const profileContainer = document.querySelector('.profile-container');
+    if (!profileContainer) return;
+    
+    // Create admin section
+    const adminSection = document.createElement('section');
+    adminSection.className = 'profile-section admin-access';
+    adminSection.innerHTML = `
+        <div class="section-header">
+            <h2><i class="fas fa-shield-alt"></i> Admin Access</h2>
+        </div>
+        <div class="admin-tools">
+            <p>You have administrator privileges on this platform.</p>
+            <a href="admin.html" class="primary-button">
+                <i class="fas fa-cogs"></i> Open Admin Dashboard
+            </a>
+        </div>
+    `;
+    
+    // Add some styling
+    const style = document.createElement('style');
+    style.textContent = `
+        .admin-access {
+            margin-top: 1.5rem;
+            border: 2px solid #ff0000 !important;
+        }
+        
+        .admin-access .section-header {
+            background: linear-gradient(to right, #990000, #cc0000) !important;
+        }
+        
+        .admin-tools {
+            padding: 1.5rem;
+        }
+        
+        .admin-tools p {
+            margin-bottom: 1rem;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Add to page
+    profileContainer.appendChild(adminSection);
+}
+
+
 function loadUserListings(userId) {
     fetch(`http://localhost:3000/listings/user/${userId}`)
         .then(response => {

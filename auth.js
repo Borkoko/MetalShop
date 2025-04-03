@@ -38,6 +38,11 @@ function checkAuth() {
     if (isLoggedIn && userId) {
         refreshUserData(userId);
     }
+    
+    // Check if user is admin
+    if (isLoggedIn && userId) {
+        checkIfAdmin(userId);
+    }
 }
 
 // Update navigation elements based on authentication status
@@ -65,6 +70,54 @@ function updateNavigation(isLoggedIn, userName) {
             loginButton.parentNode.insertBefore(logoutLink, loginButton.nextSibling);
         }
     }
+}
+
+// Check if user is an admin
+function checkIfAdmin(userId) {
+    fetch(`http://localhost:3000/users/${userId}`)
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to fetch user data");
+            return response.json();
+        })
+        .then(userData => {
+            if (userData.isAdmin) {
+                // Store admin status in localStorage
+                localStorage.setItem('isAdmin', 'true');
+                
+                // Add admin link to navigation if not already there
+                const nav = document.querySelector('nav');
+                if (nav && !document.querySelector('.admin-link')) {
+                    const adminLink = document.createElement('a');
+                    adminLink.href = 'admin.html';
+                    adminLink.className = 'nav-button admin-link';
+                    adminLink.innerHTML = '<i class="fas fa-shield-alt"></i> Admin';
+                    
+                    // Style the admin button differently
+                    adminLink.style.backgroundColor = '#ff0000';
+                    adminLink.style.color = 'white';
+                    
+                    // Add the link to navigation
+                    nav.appendChild(adminLink);
+                }
+                
+                // If on admin.html, verify access (prevents URL navigation to admin page by non-admins)
+                if (window.location.pathname.includes('admin.html')) {
+                    console.log('Admin access verified');
+                }
+            } else {
+                // Remove admin status if set
+                localStorage.removeItem('isAdmin');
+                
+                // If on admin page but not admin, redirect to home
+                if (window.location.pathname.includes('admin.html')) {
+                    alert('You do not have admin privileges');
+                    window.location.href = 'mainpage.html';
+                }
+            }
+        })
+        .catch(error => {
+            console.error("Error checking admin status:", error);
+        });
 }
 
 // Refresh user data from the server
@@ -102,6 +155,7 @@ function logout() {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("loginTime");
+    localStorage.removeItem("isAdmin");
     
     // Call logout endpoint (optional)
     fetch("http://localhost:3000/logout", { 
