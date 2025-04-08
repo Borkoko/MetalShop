@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
  * Verify user has admin access
  */
 function checkAdminAccess() {
+    console.log('Function checkAdminAccess started');
     const userId = localStorage.getItem('userId');
     currentUserId = userId;
     
@@ -66,6 +67,8 @@ function checkAdminAccess() {
  * Load admin dashboard data
  */
 function loadDashboardData() {
+    console.log('Function loadDashboardData started');
+// existing function code
     // Load all listings
     loadAllListings();
     
@@ -75,11 +78,14 @@ function loadDashboardData() {
     // Load system stats
     loadSystemStats();
 }
+console.log(localStorage.getItem('userId'));
+console.log(localStorage.getItem('isAdmin'));
 
 /**
  * Load all listings for admin view
  */
 function loadAllListings() {
+    console.log('Function loadAllListings started');
     fetch('http://localhost:3000/listings')
         .then(response => {
             if (!response.ok) throw new Error('Failed to fetch listings');

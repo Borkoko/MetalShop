@@ -140,6 +140,118 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error: ' + err.message });
     }
 });
+
+// Endpoint to update an existing t-shirt listing
+router.put('/:id', upload.array('images', 5), async (req, res) => {
+    const listingId = req.params.id;
+    const { userId, bandId, size, condition, price, description, gender, removedImageIds } = req.body;
+
+    // Validate required fields
+    if (!userId || !bandId || !size || !condition || !price || !description || !gender) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    try {
+        // Check if the listing exists and belongs to the user
+        const [listings] = await pool.promise().query(
+            'SELECT * FROM tshirts WHERE idTShirt = ? AND userId = ?',
+            [listingId, userId]
+        );
+        
+        if (listings.length === 0) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to update this listing or it does not exist' 
+            });
+        }
+        
+        // Update the listing in the database
+        await pool.promise().query(
+            `UPDATE tshirts 
+             SET bandId = ?, size = ?, item_condition = ?, 
+                 gender = ?, price = ?, description = ?
+             WHERE idTShirt = ?`,
+            [bandId, size, condition, gender, price, description, listingId]
+        );
+        
+        // Process removed images if any
+        if (removedImageIds && typeof removedImageIds === 'string') {
+            try {
+                const removedIds = JSON.parse(removedImageIds);
+                if (Array.isArray(removedIds) && removedIds.length > 0) {
+                    // Get image IDs for the listing
+                    const [imageRows] = await pool.promise().query(
+                        'SELECT id, imageUrl FROM tshirt_images WHERE tshirtId = ? ORDER BY id ASC',
+                        [listingId]
+                    );
+                    
+                    // Delete specified images by index
+                    for (const index of removedIds) {
+                        if (index >= 0 && index < imageRows.length) {
+                            const imageId = imageRows[index].id;
+                            await pool.promise().query(
+                                'DELETE FROM tshirt_images WHERE id = ?',
+                                [imageId]
+                            );
+                            console.log(`Deleted image ID ${imageId} for listing ${listingId}`);
+                        }
+                    }
+                }
+            } catch (parseError) {
+                console.error('Error parsing removedImageIds:', parseError);
+            }
+        }
+        
+        // Process new images
+        if (req.files && req.files.length > 0) {
+            // Get file paths for storing in database
+            const imagePaths = req.files.map(file => {
+                // Format the path for web URLs
+                return '/images/' + path.relative(uploadDir, file.path).replace(/\\/g, '/');
+            });
+
+            console.log('New image paths to be saved:', imagePaths);
+
+            // Insert all images into tshirt_images table
+            const imageInsertPromises = imagePaths.map(imagePath => 
+                pool.promise().query(
+                    'INSERT INTO tshirt_images (tshirtId, imageUrl) VALUES (?, ?)',
+                    [listingId, imagePath]
+                )
+            );
+
+            await Promise.all(imageInsertPromises);
+            console.log(`Inserted ${imagePaths.length} new images for tshirt ID: ${listingId}`);
+        }
+
+        // Fetch the updated listing with its images
+        const [updatedListing] = await pool.promise().query(`
+            SELECT t.*, b.name as bandName
+            FROM tshirts t
+            JOIN bands b ON t.bandId = b.idBand
+            WHERE t.idTShirt = ?
+        `, [listingId]);
+        
+        const [images] = await pool.promise().query(`
+            SELECT imageUrl FROM tshirt_images
+            WHERE tshirtId = ?
+            ORDER BY id ASC
+        `, [listingId]);
+        
+        // Add images to the response
+        const responseData = updatedListing[0] || {};
+        responseData.images = images.map(img => img.imageUrl);
+
+        res.json({ 
+            message: 'Listing updated successfully', 
+            listingId: listingId,
+            listing: responseData
+        });
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error: ' + err.message });
+    }
+});
+
 // Endpoint to get all listings
 router.get('/', async (req, res) => {
     try {
@@ -221,6 +333,7 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
 // Endpoint to get a specific listing
 router.get('/:id', async (req, res) => {
     try {
