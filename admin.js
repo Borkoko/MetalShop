@@ -20,9 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up search functionality
     setupSearch();
-    
-    // Set up system actions
-    setupSystemActions();
 });
 
 /**
@@ -68,18 +65,12 @@ function checkAdminAccess() {
  */
 function loadDashboardData() {
     console.log('Function loadDashboardData started');
-// existing function code
     // Load all listings
     loadAllListings();
     
     // Load all users
     loadAllUsers();
-    
-    // Load system stats
-    loadSystemStats();
 }
-console.log(localStorage.getItem('userId'));
-console.log(localStorage.getItem('isAdmin'));
 
 /**
  * Load all listings for admin view
@@ -200,91 +191,107 @@ function loadAllUsers() {
         });
 }
 
-/**
- * Render the users table
- */
-function renderUsersTable(users) {
-    const container = document.getElementById('users-table');
-    container.innerHTML = '';
+app.delete('/admin/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { adminId } = req.body;
     
-    if (users.length === 0) {
-        container.innerHTML = `
-            <div class="no-data">
-                <i class="fas fa-users-slash"></i>
-                <p>No users found.</p>
-            </div>
-        `;
-        return;
+    if (!adminId) {
+        return res.status(400).json({ error: 'Admin ID is required' });
     }
     
-    // Sort users by newest first
-    users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    // Create table rows
-    users.forEach(user => {
-        const row = document.createElement('div');
-        row.className = 'data-row users-row';
+    try {
+        // Verify the user is an admin
+        const [adminCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [adminId]
+        );
         
-        // Format date
-        const createdDate = new Date(user.createdAt);
-        const formattedDate = createdDate.toLocaleDateString();
+        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to perform this action' 
+            });
+        }
         
-        row.innerHTML = `
-            <div class="data-cell">${user.idUsers}</div>
-            <div class="data-cell">${user.fname} ${user.lname}</div>
-            <div class="data-cell">${user.email}</div>
-            <div class="data-cell">
-                <span class="status-badge ${user.isAdmin ? 'status-admin' : 'status-user'}">
-                    ${user.isAdmin ? 'Admin' : 'User'}
-                </span>
-            </div>
-            <div class="data-cell">${formattedDate}</div>
-            <div class="data-cell actions-cell">
-                <button class="action-btn edit-btn" title="Edit User"
-                        onclick="editUser(${user.idUsers})">
-                    <i class="fas fa-edit"></i>
-                </button>
-                ${user.idUsers !== parseInt(currentUserId) ? `
-                <button class="action-btn delete-btn" title="Delete User"
-                        onclick="confirmDeleteUser(${user.idUsers}, '${user.fname} ${user.lname}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-                ` : ''}
-            </div>
-        `;
+        // Check if target user exists
+        const [userCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [userId]
+        );
         
-        container.appendChild(row);
-    });
-}
+        if (userCheck.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Prevent deleting your own account
+        if (userId === adminId) {
+            return res.status(403).json({ 
+                error: 'You cannot delete your own admin account' 
+            });
+        }
+        
+        // Prevent deleting other admin accounts
+        if (userCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'Admin accounts cannot be deleted by other admins' 
+            });
+        }
+        
+        // Begin transaction to ensure all related data is deleted
+        await pool.promise().query('START TRANSACTION');
+        
+        try {
+            // Delete user's wishlist items
+            await pool.promise().query(
+                'DELETE FROM wishlist WHERE userId = ?',
+                [userId]
+            );
+            
+            // Delete user's chat messages
+            await pool.promise().query(
+                'DELETE FROM chat WHERE senderId = ? OR receiverId = ?',
+                [userId, userId]
+            );
+            
+            // Get user's listings for later image cleanup
+            const [listings] = await pool.promise().query(
+                'SELECT idTShirt FROM tshirts WHERE userId = ?',
+                [userId]
+            );
+            
+            // Delete user's listings (will cascade to tshirt_images)
+            await pool.promise().query(
+                'DELETE FROM tshirts WHERE userId = ?',
+                [userId]
+            );
+            
+            // Finally, delete the user
+            await pool.promise().query(
+                'DELETE FROM users WHERE idUsers = ?',
+                [userId]
+            );
+            
+            // Commit transaction
+            await pool.promise().query('COMMIT');
+            
+            // Log the admin action
+            console.log(`Admin ${adminId} deleted user ${userId}`);
+            
+            res.json({ 
+                message: 'User deleted successfully',
+                deletedBy: 'admin',
+                adminId: adminId
+            });
+        } catch (error) {
+            // Rollback transaction if any error occurs
+            await pool.promise().query('ROLLBACK');
+            throw error;
+        }
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error: ' + err.message });
+    }
+});
 
-/**
- * Load system statistics
- */
-function loadSystemStats() {
-    // We will make multiple API calls to get stats
-    Promise.all([
-        fetch('http://localhost:3000/listings').then(res => res.json()),
-        fetch(`http://localhost:3000/admin/users?adminId=${currentUserId}`).then(res => res.json()),
-        fetch('http://localhost:3000/bands').then(res => res.json()),
-        // For chat messages, we'll use a placeholder count for now
-        Promise.resolve(0)
-    ])
-    .then(([listings, users, bands, messages]) => {
-        // Update stats in the UI
-        document.getElementById('total-listings').textContent = listings.length;
-        document.getElementById('total-users').textContent = users.length;
-        document.getElementById('total-bands').textContent = bands.length;
-        document.getElementById('total-messages').textContent = messages || 'N/A';
-    })
-    .catch(error => {
-        console.error('Error loading system stats:', error);
-        showNotification('Failed to load some system statistics', 'warning');
-    });
-}
-
-/**
- * Set up tab switching functionality
- */
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -462,35 +469,6 @@ function searchUsers(term) {
 }
 
 /**
- * Set up system action buttons
- */
-function setupSystemActions() {
-    // Fix image paths button
-    const fixImagePathsBtn = document.getElementById('fix-image-paths');
-    fixImagePathsBtn.addEventListener('click', () => {
-        fixImagePaths();
-    });
-    
-    // Cleanup orphaned data button
-    const cleanupOrphanedBtn = document.getElementById('cleanup-orphaned');
-    cleanupOrphanedBtn.addEventListener('click', () => {
-        cleanupOrphanedData();
-    });
-    
-    // Clear cache button
-    const clearCacheBtn = document.getElementById('clear-cache');
-    clearCacheBtn.addEventListener('click', () => {
-        clearSystemCache();
-    });
-    
-    // Generate report button
-    const generateReportBtn = document.getElementById('generate-report');
-    generateReportBtn.addEventListener('click', () => {
-        generateSystemReport();
-    });
-}
-
-/**
  * View a listing in detail
  */
 function viewListing(listingId) {
@@ -556,9 +534,6 @@ function deleteListing(listingId) {
         
         // Reload listings
         loadAllListings();
-        
-        // Refresh system stats
-        loadSystemStats();
     })
     .catch(error => {
         console.error('Error deleting listing:', error);
@@ -608,18 +583,62 @@ function confirmDeleteUser(userId, userName) {
     deleteModal.classList.add('active');
 }
 
-/**
- * Delete a user (would need additional endpoint)
- */
 function deleteUser(userId) {
-    // This is a placeholder - would need to implement server-side functionality
-    showNotification('User deletion not implemented in this version', 'warning');
-    document.getElementById('admin-delete-modal').classList.remove('active');
+    const deleteModal = document.getElementById('admin-delete-modal');
+    const confirmDeleteButton = document.getElementById('confirm-delete');
+    const originalButtonText = confirmDeleteButton.innerHTML;
+    confirmDeleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+    confirmDeleteButton.disabled = true;
+    
+    // Make admin delete request
+    fetch(`http://localhost:3000/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            adminId: currentUserId
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('User not found');
+            } else if (response.status === 403) {
+                throw new Error('You do not have permission to delete this user');
+            } else {
+                throw new Error('Failed to delete user');
+            }
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Clean up
+        confirmDeleteButton.innerHTML = originalButtonText;
+        confirmDeleteButton.disabled = false;
+        
+        // Close modal
+        deleteModal.classList.remove('active');
+        
+        // Show success notification
+        showNotification('User deleted successfully', 'success');
+        
+        // Reload users
+        loadAllUsers();
+    })
+    .catch(error => {
+        console.error('Error deleting user:', error);
+        showNotification('Failed to delete user: ' + error.message, 'error');
+        
+        // Reset button
+        confirmDeleteButton.innerHTML = originalButtonText;
+        confirmDeleteButton.disabled = false;
+        
+        // Close modal
+        deleteModal.classList.remove('active');
+    });
 }
 
-/**
- * Open user edit modal
- */
 function editUser(userId) {
     const user = allUsers.find(u => u.idUsers === userId);
     if (!user) {
@@ -689,86 +708,6 @@ function saveUserChanges() {
     });
 }
 
-/**
- * Fix image paths system action
- */
-function fixImagePaths() {
-    // Show confirmation
-    if (!confirm('This will attempt to fix any invalid image paths in the database. Continue?')) {
-        return;
-    }
-    
-    fetch(`http://localhost:3000/fix-image-paths`)
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to fix image paths');
-            return response.json();
-        })
-        .then(data => {
-            showNotification(`Image paths fixed: ${data.message}`, 'success');
-        })
-        .catch(error => {
-            console.error('Error fixing image paths:', error);
-            showNotification('Failed to fix image paths', 'error');
-        });
-}
-
-/**
- * Cleanup orphaned data (placeholder)
- */
-function cleanupOrphanedData() {
-    // This would be implemented in a real system
-    showNotification('Orphaned data cleanup not implemented in this version', 'info');
-}
-
-/**
- * Clear system cache (placeholder)
- */
-function clearSystemCache() {
-    // This would be implemented in a real system
-    showNotification('Cache cleared successfully', 'success');
-}
-
-/**
- * Generate system report (placeholder)
- */
-function generateSystemReport() {
-    // This would generate a downloadable report in a real system
-    const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    
-    const reportContent = {
-        generated: now.toISOString(),
-        stats: {
-            listings: parseInt(document.getElementById('total-listings').textContent) || 0,
-            users: parseInt(document.getElementById('total-users').textContent) || 0,
-            bands: parseInt(document.getElementById('total-bands').textContent) || 0,
-            messages: parseInt(document.getElementById('total-messages').textContent) || 0
-        },
-        system: {
-            platform: 'Web',
-            version: '1.0.0',
-            database: 'MySQL'
-        }
-    };
-    
-    // In a real system, this would create a downloadable file
-    console.log('System Report:', reportContent);
-    
-    // Create a "fake" download to demonstrate the functionality
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reportContent, null, 2));
-    const downloadLink = document.createElement('a');
-    downloadLink.setAttribute("href", dataStr);
-    downloadLink.setAttribute("download", `metalshop-report-${dateStr}.json`);
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    downloadLink.remove();
-    
-    showNotification('System report generated', 'success');
-}
-
-/**
- * Ensure image URL is absolute
- */
 function ensureAbsoluteUrl(url) {
     if (!url) return 'http://localhost:3000/placeholder.jpg';
     

@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
@@ -6,7 +5,6 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 const fs = require('fs');
 
-// Import the listings routes module
 const listingsModule = require('./listingsRoutes');
 
 const app = express();
@@ -14,19 +12,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Define paths for images and placeholder
 const imagePath = path.join(__dirname, 'image_path');
 const placeholderPath = path.join(__dirname, 'placeholder.jpg');
 
-// Create the image_path directory if it doesn't exist
 if (!fs.existsSync(imagePath)) {
     fs.mkdirSync(imagePath, { recursive: true });
     console.log(`Created image directory: ${imagePath}`);
 }
 
-// Create a simple placeholder image if it doesn't exist
 const createPlaceholderImage = () => {
-    // Check if placeholder already exists
     if (fs.existsSync(placeholderPath)) {
         console.log('Placeholder image already exists at:', placeholderPath);
         return;
@@ -34,34 +28,21 @@ const createPlaceholderImage = () => {
     
     console.log('Creating a default placeholder image...');
     
-    // This is a base64 encoded 1x1 pixel JPEG
     const base64Image = '/9j/4AAQSkZJRgABAQEAYABgAAD//gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2NjIpLCBxdWFsaXR5ID0gOTAK/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU/8AAEQgAAQABAwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A/fygkAZPAFNkkSKNpJHVEUZZmOAB6mvl/wCIvx/1HxLqVx4f8IahPpOlxkxzahBlJbr12n+GP05b61lUqRprU6KNCdeVonofiz4x+H/CF1Ha6nqKC8YZFrCpklx6heQPqa0/C/i/QPGFv5uilLe8UZks5iBIn4f3h7V8dW1vHbJtQtgkkljksfU+9XrLULrSL2O8spZLa4ibckiHBB/z2rH63fRG/wDZnLrNn//Z';
     
     try {
-        // Convert base64 to binary
         const imageData = Buffer.from(base64Image, 'base64');
-        
-        // Write to file
         fs.writeFileSync(placeholderPath, imageData);
         console.log('Created placeholder image at:', placeholderPath);
     } catch (error) {
         console.error('Failed to create placeholder image:', error);
     }
 };
-
-// Create the placeholder image if needed
 createPlaceholderImage();
 
-// Serve images from the image_path directory
 app.use('/images', express.static(imagePath));
 
-// Serve placeholder image
 app.use('/placeholder.jpg', express.static(placeholderPath));
-
-// Debug logging
-console.log(`Images are being served from: ${imagePath}`);
-console.log(`They will be accessible at: http://localhost:3000/images/...`);
-console.log(`Placeholder image is served at: http://localhost:3000/placeholder.jpg`);
 
 app.use('/listings', listingsModule.router);
 
@@ -75,7 +56,6 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Ensure tshirt_images table exists
 pool.query(`
   CREATE TABLE IF NOT EXISTS tshirt_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -92,10 +72,8 @@ pool.query(`
   }
 });
 
-// Pass the database pool to the listings module
 listingsModule.setPool(pool);
 
-// User registration endpoint
 app.post('/users', async (req, res) => {
     const { fname, lname, email, password } = req.body;
 
@@ -104,7 +82,6 @@ app.post('/users', async (req, res) => {
     }
 
     try {
-        // Check if the email already exists
         const [existingUsers] = await pool.promise().query(
             'SELECT * FROM Users WHERE email = ?',
             [email]
@@ -114,10 +91,8 @@ app.post('/users', async (req, res) => {
             return res.status(400).json({ error: 'Email already in use' });
         }
 
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10); // 10 = salt rounds
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert new user into database
         const [result] = await pool.promise().query(
             'INSERT INTO Users (fname, lname, email, password) VALUES (?, ?, ?, ?)',
             [fname, lname, email, hashedPassword]
@@ -138,7 +113,6 @@ if (!fs.existsSync(uploadDir)) {
     console.log(`Created upload directory: ${uploadDir}`);
 }
 
-// Login endpoint
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -173,7 +147,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-// Get user endpoint
 app.get('/users/:id', (req, res) => {
     const userId = req.params.id;
     
@@ -193,7 +166,7 @@ app.get('/users/:id', (req, res) => {
             firstName: user.fname,
             lastName: user.lname,
             email: user.email,
-            isAdmin: !!user.isAdmin, // Convert to boolean
+            isAdmin: !!user.isAdmin,
             createdAt: user.createdAt
         });
     });
@@ -203,7 +176,6 @@ app.get('/listings/user/:userId', async (req, res) => {
     const userId = req.params.userId;
     
     try {
-        // Fetch user's listings
         const [listings] = await pool.promise().query(`
             SELECT t.*, b.name as bandName, u.fname, u.lname 
             FROM tshirts t
@@ -213,7 +185,6 @@ app.get('/listings/user/:userId', async (req, res) => {
             ORDER BY t.createdAt DESC
         `, [userId]);
         
-        // For each listing, get the main image from the tshirt_images table
         for (let listing of listings) {
             const [images] = await pool.promise().query(`
                 SELECT imageUrl FROM tshirt_images 
@@ -235,18 +206,15 @@ app.get('/listings/user/:userId', async (req, res) => {
     }
 });
 
-// Delete a listing
 app.delete('/listings/:id', async (req, res) => {
     const listingId = req.params.id;
     const { userId } = req.body;
     
-    // Validate input
     if (!userId) {
         return res.status(400).json({ error: 'User ID is required' });
     }
     
     try {
-        // Check if the listing exists and belongs to the user
         const [listings] = await pool.promise().query(
             'SELECT * FROM tshirts WHERE idTShirt = ? AND userId = ?',
             [listingId, userId]
@@ -258,20 +226,15 @@ app.delete('/listings/:id', async (req, res) => {
             });
         }
         
-        // Get image paths before deletion to clean up files
         const [images] = await pool.promise().query(
             'SELECT imageUrl FROM tshirt_images WHERE tshirtId = ?',
             [listingId]
         );
         
-        // Delete the listing (tshirt_images will be deleted by CASCADE)
         await pool.promise().query(
             'DELETE FROM tshirts WHERE idTShirt = ?',
             [listingId]
         );
-        
-        // Clean up image files (optional, can be implemented if needed)
-        // This would require parsing the imageUrl and removing the actual files
         
         res.json({ message: 'Listing deleted successfully' });
     } catch (err) {
@@ -280,18 +243,15 @@ app.delete('/listings/:id', async (req, res) => {
     }
 });
 
-// Update user profile
 app.put('/users/:id', async (req, res) => {
     const userId = req.params.id;
     const { fname, lname, email, password } = req.body;
     
-    // Validate input
     if (!fname || !lname || !email) {
         return res.status(400).json({ error: 'First name, last name, and email are required' });
     }
     
     try {
-        // Check if the user exists
         const [users] = await pool.promise().query(
             'SELECT * FROM Users WHERE idUsers = ?',
             [userId]
@@ -301,7 +261,6 @@ app.put('/users/:id', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
         
-        // Check if the email is already in use by a different user
         if (email !== users[0].email) {
             const [existingUsers] = await pool.promise().query(
                 'SELECT * FROM Users WHERE email = ? AND idUsers != ?',
@@ -313,25 +272,20 @@ app.put('/users/:id', async (req, res) => {
             }
         }
         
-        // Update query and parameters
         let query = 'UPDATE Users SET fname = ?, lname = ?, email = ?';
         let params = [fname, lname, email];
         
-        // If password is provided, hash it and include in update
         if (password) {
             const hashedPassword = await bcrypt.hash(password, 10);
             query += ', password = ?';
             params.push(hashedPassword);
         }
         
-        // Add WHERE clause
         query += ' WHERE idUsers = ?';
         params.push(userId);
         
-        // Execute update
         await pool.promise().query(query, params);
         
-        // Return updated user data
         res.json({ 
             message: 'Profile updated successfully',
             userId: userId,
@@ -345,7 +299,107 @@ app.put('/users/:id', async (req, res) => {
     }
 });
 
-// Admin endpoint to delete any listing
+app.delete('/admin/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { adminId } = req.body;
+    
+    if (!adminId) {
+        return res.status(400).json({ error: 'Admin ID is required' });
+    }
+    
+    try {
+        // Verify the user is an admin
+        const [adminCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [adminId]
+        );
+        
+        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'You are not authorized to perform this action' 
+            });
+        }
+        
+        // Check if target user exists
+        const [userCheck] = await pool.promise().query(
+            'SELECT isAdmin FROM users WHERE idUsers = ?',
+            [userId]
+        );
+        
+        if (userCheck.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Prevent deleting your own account
+        if (userId === adminId) {
+            return res.status(403).json({ 
+                error: 'You cannot delete your own admin account' 
+            });
+        }
+        
+        // Prevent deleting other admin accounts
+        if (userCheck[0].isAdmin) {
+            return res.status(403).json({ 
+                error: 'Admin accounts cannot be deleted by other admins' 
+            });
+        }
+        
+        // Begin transaction to ensure all related data is deleted
+        await pool.promise().query('START TRANSACTION');
+        
+        try {
+            // Delete user's wishlist items
+            await pool.promise().query(
+                'DELETE FROM wishlist WHERE userId = ?',
+                [userId]
+            );
+            
+            // Delete user's chat messages
+            await pool.promise().query(
+                'DELETE FROM chat WHERE senderId = ? OR receiverId = ?',
+                [userId, userId]
+            );
+            
+            // Get user's listings for later image cleanup
+            const [listings] = await pool.promise().query(
+                'SELECT idTShirt FROM tshirts WHERE userId = ?',
+                [userId]
+            );
+            
+            // Delete user's listings (will cascade to tshirt_images)
+            await pool.promise().query(
+                'DELETE FROM tshirts WHERE userId = ?',
+                [userId]
+            );
+            
+            // Finally, delete the user
+            await pool.promise().query(
+                'DELETE FROM users WHERE idUsers = ?',
+                [userId]
+            );
+            
+            // Commit transaction
+            await pool.promise().query('COMMIT');
+            
+            // Log the admin action
+            console.log(`Admin ${adminId} deleted user ${userId}`);
+            
+            res.json({ 
+                message: 'User deleted successfully',
+                deletedBy: 'admin',
+                adminId: adminId
+            });
+        } catch (error) {
+            // Rollback transaction if any error occurs
+            await pool.promise().query('ROLLBACK');
+            throw error;
+        }
+    } catch (err) {
+        console.error('Database error:', err);
+        res.status(500).json({ error: 'Internal Server Error: ' + err.message });
+    }
+});
+
 app.delete('/admin/listings/:id', async (req, res) => {
     const listingId = req.params.id;
     const { adminId } = req.body;
