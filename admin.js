@@ -191,107 +191,71 @@ function loadAllUsers() {
         });
 }
 
-app.delete('/admin/users/:id', async (req, res) => {
-    const userId = req.params.id;
-    const { adminId } = req.body;
+/**
+ * Render the users table
+ */
+function renderUsersTable(users) {
+    const container = document.getElementById('users-table');
+    container.innerHTML = '';
     
-    if (!adminId) {
-        return res.status(400).json({ error: 'Admin ID is required' });
+    if (users.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-users-slash"></i>
+                <p>No users found.</p>
+            </div>
+        `;
+        return;
     }
     
-    try {
-        // Verify the user is an admin
-        const [adminCheck] = await pool.promise().query(
-            'SELECT isAdmin FROM users WHERE idUsers = ?',
-            [adminId]
-        );
+    // Sort users by newest first
+    users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    // Create table rows
+    users.forEach(user => {
+        const row = document.createElement('div');
+        row.className = 'data-row users-row';
         
-        if (adminCheck.length === 0 || !adminCheck[0].isAdmin) {
-            return res.status(403).json({ 
-                error: 'You are not authorized to perform this action' 
-            });
-        }
+        // Format date
+        const createdDate = new Date(user.createdAt);
+        const formattedDate = createdDate.toLocaleDateString();
         
-        // Check if target user exists
-        const [userCheck] = await pool.promise().query(
-            'SELECT isAdmin FROM users WHERE idUsers = ?',
-            [userId]
-        );
+        // Determine if delete button should be enabled or disabled
+        const canDelete = !user.isAdmin && user.idUsers !== parseInt(currentUserId);
+        const deleteButton = canDelete ? 
+            `<button class="action-btn delete-btn" title="Delete User" onclick="confirmDeleteUser(${user.idUsers}, '${user.fname} ${user.lname}')">
+                <i class="fas fa-trash"></i>
+            </button>` :
+            `<button class="action-btn delete-btn" title="Cannot delete admin accounts" disabled style="opacity: 0.5; cursor: not-allowed;">
+                <i class="fas fa-trash"></i>
+            </button>`;
         
-        if (userCheck.length === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
+        row.innerHTML = `
+            <div class="data-cell">${user.idUsers}</div>
+            <div class="data-cell">${user.fname} ${user.lname}</div>
+            <div class="data-cell">${user.email}</div>
+            <div class="data-cell">
+                <span class="status-badge ${user.isAdmin ? 'status-admin' : 'status-user'}">
+                    ${user.isAdmin ? 'Admin' : 'User'}
+                </span>
+            </div>
+            <div class="data-cell">${formattedDate}</div>
+            <div class="data-cell actions-cell">
+                <button class="action-btn edit-btn" title="Edit User"
+                        onclick="editUser(${user.idUsers})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                ${user.idUsers !== parseInt(currentUserId) ? deleteButton : ''}
+            </div>
+        `;
         
-        // Prevent deleting your own account
-        if (userId === adminId) {
-            return res.status(403).json({ 
-                error: 'You cannot delete your own admin account' 
-            });
-        }
-        
-        // Prevent deleting other admin accounts
-        if (userCheck[0].isAdmin) {
-            return res.status(403).json({ 
-                error: 'Admin accounts cannot be deleted by other admins' 
-            });
-        }
-        
-        // Begin transaction to ensure all related data is deleted
-        await pool.promise().query('START TRANSACTION');
-        
-        try {
-            // Delete user's wishlist items
-            await pool.promise().query(
-                'DELETE FROM wishlist WHERE userId = ?',
-                [userId]
-            );
-            
-            // Delete user's chat messages
-            await pool.promise().query(
-                'DELETE FROM chat WHERE senderId = ? OR receiverId = ?',
-                [userId, userId]
-            );
-            
-            // Get user's listings for later image cleanup
-            const [listings] = await pool.promise().query(
-                'SELECT idTShirt FROM tshirts WHERE userId = ?',
-                [userId]
-            );
-            
-            // Delete user's listings (will cascade to tshirt_images)
-            await pool.promise().query(
-                'DELETE FROM tshirts WHERE userId = ?',
-                [userId]
-            );
-            
-            // Finally, delete the user
-            await pool.promise().query(
-                'DELETE FROM users WHERE idUsers = ?',
-                [userId]
-            );
-            
-            // Commit transaction
-            await pool.promise().query('COMMIT');
-            
-            // Log the admin action
-            console.log(`Admin ${adminId} deleted user ${userId}`);
-            
-            res.json({ 
-                message: 'User deleted successfully',
-                deletedBy: 'admin',
-                adminId: adminId
-            });
-        } catch (error) {
-            // Rollback transaction if any error occurs
-            await pool.promise().query('ROLLBACK');
-            throw error;
-        }
-    } catch (err) {
-        console.error('Database error:', err);
-        res.status(500).json({ error: 'Internal Server Error: ' + err.message });
-    }
-});
+        container.appendChild(row);
+    });
+}
 
+/**
+ * Set up tab switching functionality
+ */
 function setupTabs() {
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -583,7 +547,11 @@ function confirmDeleteUser(userId, userName) {
     deleteModal.classList.add('active');
 }
 
+/**
+ * Delete a user
+ */
 function deleteUser(userId) {
+    // Show loading state
     const deleteModal = document.getElementById('admin-delete-modal');
     const confirmDeleteButton = document.getElementById('confirm-delete');
     const originalButtonText = confirmDeleteButton.innerHTML;
@@ -639,6 +607,9 @@ function deleteUser(userId) {
     });
 }
 
+/**
+ * Open user edit modal
+ */
 function editUser(userId) {
     const user = allUsers.find(u => u.idUsers === userId);
     if (!user) {
@@ -655,25 +626,19 @@ function editUser(userId) {
     const userEditModal = document.getElementById('user-edit-modal');
     userEditModal.dataset.userId = userId;
     
-    // Show modal
     userEditModal.classList.add('active');
 }
 
-/**
- * Save user changes
- */
 function saveUserChanges() {
     const userEditModal = document.getElementById('user-edit-modal');
     const userId = userEditModal.dataset.userId;
     const isAdmin = document.getElementById('edit-user-admin').checked;
     
-    // Show loading state
     const saveButton = document.getElementById('save-user-edit');
     const originalButtonText = saveButton.innerHTML;
     saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     saveButton.disabled = true;
     
-    // Update user admin status
     fetch(`http://localhost:3000/admin/users/${userId}`, {
         method: 'PATCH',
         headers: {
@@ -689,20 +654,16 @@ function saveUserChanges() {
         return response.json();
     })
     .then(data => {
-        // Close modal
         userEditModal.classList.remove('active');
         
-        // Show success notification
         showNotification('User updated successfully', 'success');
         
-        // Reload users
         loadAllUsers();
     })
     .catch(error => {
         console.error('Error updating user:', error);
         showNotification('Failed to update user: ' + error.message, 'error');
         
-        // Reset button
         saveButton.innerHTML = originalButtonText;
         saveButton.disabled = false;
     });
@@ -722,9 +683,6 @@ function ensureAbsoluteUrl(url) {
     return `http://localhost:3000/${url}`;
 }
 
-/**
- * Show notification to the user
- */
 function showNotification(message, type = 'info') {
     const notification = document.getElementById('notification');
     if (!notification) return;
